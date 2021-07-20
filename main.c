@@ -10,13 +10,14 @@ int main(int argc, const char* argv[]) {
     initChunk(&chunk);
 
     writeConstant(&chunk, 1.2, 1);
-    writeConstant(&chunk, 3.4, 2);
+    writeConstant(&chunk, 3.4, 1);
+    writeChunk(&chunk, OP_ADD, 1);
+    
+    writeConstant(&chunk, 5.6, 1);
+    writeChunk(&chunk, OP_MULTIPLY, 1);
+    writeChunk(&chunk, OP_NEGATE, 1);
 
-    writeChunk(&chunk, OP_RETURN, 3);
-    writeChunk(&chunk, OP_RETURN, 4);
-    writeChunk(&chunk, OP_RETURN, 5);
-    writeChunk(&chunk, OP_RETURN, 5);
-    writeChunk(&chunk, OP_RETURN, 6);
+    writeChunk(&chunk, OP_RETURN, 1);
 
     disassembleChunk(&chunk, "test chunk");
     interpret(&chunk);
