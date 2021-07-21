@@ -1,27 +1,76 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include "common.h"
 #include "chunk.h"
 #include "debug.h"
 #include "vm.h"
 
+static void repl() {
+    char line[1024];
+    for (;;) {
+        printf("> ");
+
+        if (!fgets(line, sizeof(line), stdin)) {
+            printf("\n");
+            break;
+        }
+
+        interpret(line);
+    }
+}
+
+static char* readFile(const char* path) {
+    FILE* file = fopen(path, "rb");
+    if (file == NULL) {
+        fprintf(stderr, "Hindi mabuksan ang talaksan (file) \"%s\".\n", path);
+        exit(74);
+    }
+
+    fseek(file, 0L, SEEK_END);
+    size_t fileSize = ftell(file);
+    rewind(file);
+
+    char* buffer = (char*)malloc(fileSize + 1);
+    if (buffer == NULL) {
+        fprintf(stderr, "Kinulang ng puwesto upang basahin ang \"%s\".\n", path);
+        exit(74);
+    }
+
+    size_t byteRead = fread(buffer, sizeof(char), fileSize, file);
+    if (byteRead < fileSize) {
+        fprintf(stderr, "Hindi mabasa ang talaksan (file) \"%s\".\n", path);
+        exit(74);
+    }
+
+    buffer[byteRead] = '\0';
+
+    fclose(file);
+    return buffer;
+}
+
+static void runFile(const char* path) {
+    char* source = readFile(path);
+    InterpretResult result = interpret(source);
+    free(source);
+
+    if (result == INTERPRET_COMPILE_ERROR) exit(65);
+    if (result == INTERPRET_RUNTIME_ERROR) exit(70);
+}
+
 int main(int argc, const char* argv[]) {
     initVM();
 
-    Chunk chunk;
-    initChunk(&chunk);
+    if (argc == 1) {
+        repl();
+    } else if (argc == 2) {
+        runFile(argv[1]);
+    } else {
+        fprintf(stderr, "Tamang pagtawag: cawit [lokasyon]");
+        exit(64);
+    }
 
-    writeConstant(&chunk, 1.2, 1);
-    writeConstant(&chunk, 3.4, 1);
-    writeChunk(&chunk, OP_ADD, 1);
-    
-    writeConstant(&chunk, 5.6, 1);
-    writeChunk(&chunk, OP_MULTIPLY, 1);
-    writeChunk(&chunk, OP_NEGATE, 1);
-
-    writeChunk(&chunk, OP_RETURN, 1);
-
-    disassembleChunk(&chunk, "test chunk");
-    interpret(&chunk);
     freeVM();
-    freeChunk(&chunk);
     return 0;
 }
