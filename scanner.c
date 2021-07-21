@@ -86,35 +86,43 @@ static bool toDedent() {
         peek() != ' ';
 }
 
+static Token makeIndent() {
+    scanner.indentOffset++;
+    scanner.start = scanner.current - scanner.spaceCount;
+    return makeToken(TOKEN_URONG);
+}
+
+static Token makeDedent() {
+    scanner.indentOffset--;
+    scanner.start = scanner.current - scanner.spaceCount;
+    return makeToken(TOKEN_DULONG_URONG);
+}
+
 static Token handleWhiteSpace() {
+    scanner.spaceCount = -1;
     for (;;) {
         char c = peek();
+        
         switch (c) {
             case ' ':
             case '\r':
             case '\t':
                 advance();
+                if (scanner.spaceCount == -1) scanner.spaceCount = 0;
                 scanner.spaceCount += c == '\t' ? TAB_SPACE : 1;
 
                 if (scanner.spaceCount % TAB_SPACE != 0) {
-                    scanner.spaceCount = 
-                        peek() != ' ' ? scanner.spaceCount : 0;
-                    scanner.spaceCount = 0;
                     break;
                 }
                 
-                if (toIndent()) {
-                    scanner.indentOffset++;
-                    return makeToken(TOKEN_URONG);
-                } else if (toDedent()) {
-                    scanner.indentOffset--;
-                    return makeToken(TOKEN_DULONG_URONG);
-                }
+                if (toIndent()) return makeIndent();
+                else if (toDedent()) return makeDedent();
+                
                 break;
             case '\n':
+                advance();
                 scanner.line++;
                 scanner.spaceCount = 0;
-                advance();
                 break;
             case '/':
                 if (peekNext() == '/') {
@@ -241,9 +249,11 @@ static Token string() {
 
 Token scanToken() {
     Token indentToken = handleWhiteSpace();
-    if (indentToken.type != TOKEN_PATLANG && indentToken.type != TOKEN_PROBLEMA) {
+    if (indentToken.type != TOKEN_PATLANG && indentToken.type != TOKEN_PROBLEMA)
         return indentToken;
-    }
+    else if (scanner.spaceCount % TAB_SPACE == 0 && toDedent())
+        return makeDedent();
+
     scanner.start = scanner.current;
 
     if (isAtEnd()) return makeToken(TOKEN_DULO);
