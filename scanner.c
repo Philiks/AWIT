@@ -268,10 +268,14 @@ Token scanToken() {
         case ';': return makeToken(TOKEN_TULDOK_KUWIT);
         case ',': return makeToken(TOKEN_KUWIT);
         case '.': return makeToken(TOKEN_TULDOK);
-        case '-': return makeToken(TOKEN_BAWAS);
-        case '+': return makeToken(TOKEN_DAGDAG);
         case '/': return makeToken(TOKEN_PAHILIS);
         case '*': return makeToken(TOKEN_BITUIN);
+        case '-': 
+            return makeToken(
+                match('-') ? TOKEN_BAWAS_ISA : TOKEN_BAWAS);
+        case '+': 
+            return makeToken(
+                match('+') ? TOKEN_DAGDAG_ISA : TOKEN_DAGDAG);
         case '!':
             return makeToken(
                 match('=') ? TOKEN_HINDI_PAREHO : TOKEN_HINDI);
