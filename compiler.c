@@ -49,14 +49,14 @@ static Chunk* currentChunk() {
 static void errorAt(Token* token, const char* message) {
     if (parser.panicMode) return;
     parser.panicMode = true;
-    fprintf(stderr, "[line %d] Error", token->line);
+    fprintf(stderr, "[linya %d] Mali", token->line);
 
     if (token->type == TOKEN_DULO) {
-        fprintf(stderr, " at end");
+        fprintf(stderr, " sa dulo");
     } else if (token->type == TOKEN_PROBLEMA) {
         // Nothing.
     } else {
-        fprintf(stderr, " at '%.*s'", token->length, token->start);
+        fprintf(stderr, " sa '%.*s'", token->length, token->start);
     }
 
     fprintf(stderr, ": %s\n", message);
