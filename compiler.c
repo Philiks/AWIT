@@ -127,11 +127,26 @@ static void binary() {
     parsePrecedence((Precedence)rule->precedence + 1);
 
     switch (operatorType) {
-        case TOKEN_DAGDAG:  emitByte(OP_ADD); break;
-        case TOKEN_BAWAS:   emitByte(OP_SUBTRACT); break;
-        case TOKEN_BITUIN:  emitByte(OP_MULTIPLY); break;
-        case TOKEN_PAHILIS: emitByte(OP_DIVIDE); break;
+        case TOKEN_HINDI_PAREHO:    emitBytes(OP_EQUAL, OP_NOT); break;
+        case TOKEN_PAREHO:          emitByte(OP_EQUAL); break;
+        case TOKEN_HIGIT:           emitByte(OP_GREATER); break;
+        case TOKEN_HIGIT_PAREHO:    emitBytes(OP_LESS, OP_NOT); break;
+        case TOKEN_BABA:            emitByte(OP_LESS); break;
+        case TOKEN_BABA_PAREHO:     emitBytes(OP_GREATER, OP_NOT); break;
+        case TOKEN_DAGDAG:          emitByte(OP_ADD); break;
+        case TOKEN_BAWAS:           emitByte(OP_SUBTRACT); break;
+        case TOKEN_BITUIN:          emitByte(OP_MULTIPLY); break;
+        case TOKEN_PAHILIS:         emitByte(OP_DIVIDE); break;
         default: return; // Unreachable
+    }
+}
+
+static void literal() {
+    switch (parser.previous.type) {
+        case TOKEN_MALI: emitByte(OP_FALSE); break;
+        case TOKEN_NULL: emitByte(OP_NULL); break;
+        case TOKEN_TAMA: emitByte(OP_TRUE); break;
+        default: return; // Unreachable.
     }
 }
 
@@ -143,7 +158,7 @@ static void grouping() {
 
 static void number() {
     double value = strtod(parser.previous.start, NULL);
-    emitConstant(value);
+    emitConstant(NUMBER_VAL(value));
 }
 
 static void unary() {
@@ -154,6 +169,7 @@ static void unary() {
 
     // Emit the operator instruction.
     switch (operatorType) {
+        case TOKEN_HINDI: emitByte(OP_NOT); break;
         case TOKEN_BAWAS: emitByte(OP_NEGATE); break;
         default: return; // Unreachable.
     }
@@ -171,14 +187,14 @@ ParseRule rules[] = {
     [TOKEN_BAWAS_ISA]        = {NULL,      NULL,    PREC_NONE},
     [TOKEN_DAGDAG]           = {NULL,      binary,  PREC_TERM},
     [TOKEN_DAGDAG_ISA]       = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_HINDI]            = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_HINDI_PAREHO]     = {NULL,      NULL,    PREC_NONE},
+    [TOKEN_HINDI]            = {unary,     NULL,    PREC_NONE},
+    [TOKEN_HINDI_PAREHO]     = {NULL,      binary,  PREC_EQUALITY},
     [TOKEN_KATUMBAS]         = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_PAREHO]           = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_HIGIT]            = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_HIGIT_PAREHO]     = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_BABA]             = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_BABA_PAREHO]      = {NULL,      NULL,    PREC_NONE},
+    [TOKEN_PAREHO]           = {NULL,      binary,  PREC_EQUALITY},
+    [TOKEN_HIGIT]            = {NULL,      binary,  PREC_COMPARISON},
+    [TOKEN_HIGIT_PAREHO]     = {NULL,      binary,  PREC_COMPARISON},
+    [TOKEN_BABA]             = {NULL,      binary,  PREC_COMPARISON},
+    [TOKEN_BABA_PAREHO]      = {NULL,      binary,  PREC_COMPARISON},
     [TOKEN_PAGKAKAKILANLAN]  = {NULL,      NULL,    PREC_NONE},
     [TOKEN_SALITA]           = {NULL,      NULL,    PREC_NONE},
     [TOKEN_NUMERO]           = {number,    NULL,    PREC_NONE},
@@ -195,12 +211,12 @@ ParseRule rules[] = {
     [TOKEN_KILALANIN]        = {NULL,      NULL,    PREC_NONE},
     [TOKEN_KUNDIMAN]         = {NULL,      NULL,    PREC_NONE},
     [TOKEN_KUNG]             = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_MALI]             = {NULL,      NULL,    PREC_NONE},
+    [TOKEN_MALI]             = {literal,   NULL,    PREC_NONE},
     [TOKEN_MULA]             = {NULL,      NULL,    PREC_NONE},
     [TOKEN_NGUNIT_KUNG]      = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_NULL]             = {NULL,      NULL,    PREC_NONE},
+    [TOKEN_NULL]             = {literal,   NULL,    PREC_NONE},
     [TOKEN_O]                = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_TAMA]             = {NULL,      NULL,    PREC_NONE},
+    [TOKEN_TAMA]             = {literal,   NULL,    PREC_NONE},
     [TOKEN_URI]              = {NULL,      NULL,    PREC_NONE},
     [TOKEN_URONG]            = {NULL,      NULL,    PREC_NONE},
     [TOKEN_DULONG_URONG]     = {NULL,      NULL,    PREC_NONE},
