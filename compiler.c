@@ -26,7 +26,7 @@ typedef enum {
     PREC_TERM,          // + -
     PREC_FACTOR,        // * /
     PREC_UNARY,         // ! - ++ --
-    PREC_PRE_INC,       // ++ --
+    PREC_POST_INC,      // ++ --
     PREC_CALL,          // . ()
     PREC_PRIMARY
 } Precedence;
@@ -165,6 +165,16 @@ static void string() {
     emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length - 2)));
 }
 
+static void decrement() {
+    emitConstant(NUMBER_VAL(1));
+    emitByte(OP_SUBTRACT);
+}
+
+static void increment() {
+    emitConstant(NUMBER_VAL(1));
+    emitByte(OP_ADD);
+}
+
 static void unary() {
     TokenType operatorType = parser.previous.type;
 
@@ -175,58 +185,66 @@ static void unary() {
     switch (operatorType) {
         case TOKEN_HINDI: emitByte(OP_NOT); break;
         case TOKEN_BAWAS: emitByte(OP_NEGATE); break;
+        case TOKEN_BAWAS_ISA: {
+            decrement();
+            break;
+        }
+        case TOKEN_DAGDAG_ISA: {
+            increment();
+            break;
+        }
         default: return; // Unreachable.
     }
 }
 
 ParseRule rules[] = {
-    [TOKEN_KALIWANG_PAREN]   = {grouping,  NULL,    PREC_NONE},
-    [TOKEN_KANANG_PAREN]     = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_KUWIT]            = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_TULDOK]           = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_TULDOK_KUWIT]     = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_PAHILIS]          = {NULL,      binary,  PREC_FACTOR},
-    [TOKEN_BITUIN]           = {NULL,      binary,  PREC_FACTOR},
-    [TOKEN_BAWAS]            = {unary,     binary,  PREC_TERM},
-    [TOKEN_BAWAS_ISA]        = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_DAGDAG]           = {NULL,      binary,  PREC_TERM},
-    [TOKEN_DAGDAG_ISA]       = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_HINDI]            = {unary,     NULL,    PREC_NONE},
-    [TOKEN_HINDI_PAREHO]     = {NULL,      binary,  PREC_EQUALITY},
-    [TOKEN_KATUMBAS]         = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_PAREHO]           = {NULL,      binary,  PREC_EQUALITY},
-    [TOKEN_HIGIT]            = {NULL,      binary,  PREC_COMPARISON},
-    [TOKEN_HIGIT_PAREHO]     = {NULL,      binary,  PREC_COMPARISON},
-    [TOKEN_BABA]             = {NULL,      binary,  PREC_COMPARISON},
-    [TOKEN_BABA_PAREHO]      = {NULL,      binary,  PREC_COMPARISON},
-    [TOKEN_PAGKAKAKILANLAN]  = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_SALITA]           = {string,    NULL,    PREC_NONE},
-    [TOKEN_NUMERO]           = {number,    NULL,    PREC_NONE},
-    [TOKEN_AT]               = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_GAWAIN]           = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_GAWIN]            = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_HABANG]           = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_IBALIK]           = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_IPAKITA]          = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_ITIGIL]           = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_ITO]              = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_ITULOY]           = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_KADA]             = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_KILALANIN]        = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_KUNDIMAN]         = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_KUNG]             = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_MALI]             = {literal,   NULL,    PREC_NONE},
-    [TOKEN_MULA]             = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_NGUNIT_KUNG]      = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_NULL]             = {literal,   NULL,    PREC_NONE},
-    [TOKEN_O]                = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_TAMA]             = {literal,   NULL,    PREC_NONE},
-    [TOKEN_URI]              = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_URONG]            = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_DULONG_URONG]     = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_PATLANG]          = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_PROBLEMA]         = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_DULO]             = {NULL,      NULL,    PREC_NONE},
+    [TOKEN_KALIWANG_PAREN]   = {grouping,  NULL,      PREC_NONE},
+    [TOKEN_KANANG_PAREN]     = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_KUWIT]            = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_TULDOK]           = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_TULDOK_KUWIT]     = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_PAHILIS]          = {NULL,      binary,    PREC_FACTOR},
+    [TOKEN_BITUIN]           = {NULL,      binary,    PREC_FACTOR},
+    [TOKEN_BAWAS]            = {unary,     binary,    PREC_TERM},
+    [TOKEN_BAWAS_ISA]        = {unary,     decrement, PREC_POST_INC},
+    [TOKEN_DAGDAG]           = {NULL,      binary,    PREC_TERM},
+    [TOKEN_DAGDAG_ISA]       = {unary,     increment, PREC_POST_INC},
+    [TOKEN_HINDI]            = {unary,     NULL,      PREC_NONE},
+    [TOKEN_HINDI_PAREHO]     = {NULL,      binary,    PREC_EQUALITY},
+    [TOKEN_KATUMBAS]         = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_PAREHO]           = {NULL,      binary,    PREC_EQUALITY},
+    [TOKEN_HIGIT]            = {NULL,      binary,    PREC_COMPARISON},
+    [TOKEN_HIGIT_PAREHO]     = {NULL,      binary,    PREC_COMPARISON},
+    [TOKEN_BABA]             = {NULL,      binary,    PREC_COMPARISON},
+    [TOKEN_BABA_PAREHO]      = {NULL,      binary,    PREC_COMPARISON},
+    [TOKEN_PAGKAKAKILANLAN]  = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_SALITA]           = {string,    NULL,      PREC_NONE},
+    [TOKEN_NUMERO]           = {number,    NULL,      PREC_NONE},
+    [TOKEN_AT]               = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_GAWAIN]           = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_GAWIN]            = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_HABANG]           = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_IBALIK]           = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_IPAKITA]          = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_ITIGIL]           = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_ITO]              = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_ITULOY]           = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_KADA]             = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_KILALANIN]        = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_KUNDIMAN]         = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_KUNG]             = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_MALI]             = {literal,   NULL,      PREC_NONE},
+    [TOKEN_MULA]             = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_NGUNIT_KUNG]      = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_NULL]             = {literal,   NULL,      PREC_NONE},
+    [TOKEN_O]                = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_TAMA]             = {literal,   NULL,      PREC_NONE},
+    [TOKEN_URI]              = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_URONG]            = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_DULONG_URONG]     = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_PATLANG]          = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_PROBLEMA]         = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_DULO]             = {NULL,      NULL,      PREC_NONE},
 };
 
 static void parsePrecedence(Precedence precedence) {
