@@ -161,6 +161,10 @@ static void number() {
     emitConstant(NUMBER_VAL(value));
 }
 
+static void string() {
+    emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length - 2)));
+}
+
 static void unary() {
     TokenType operatorType = parser.previous.type;
 
@@ -196,7 +200,7 @@ ParseRule rules[] = {
     [TOKEN_BABA]             = {NULL,      binary,  PREC_COMPARISON},
     [TOKEN_BABA_PAREHO]      = {NULL,      binary,  PREC_COMPARISON},
     [TOKEN_PAGKAKAKILANLAN]  = {NULL,      NULL,    PREC_NONE},
-    [TOKEN_SALITA]           = {NULL,      NULL,    PREC_NONE},
+    [TOKEN_SALITA]           = {string,    NULL,    PREC_NONE},
     [TOKEN_NUMERO]           = {number,    NULL,    PREC_NONE},
     [TOKEN_AT]               = {NULL,      NULL,    PREC_NONE},
     [TOKEN_GAWAIN]           = {NULL,      NULL,    PREC_NONE},
