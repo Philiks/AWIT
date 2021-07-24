@@ -24,11 +24,14 @@ struct ObjString {
     Obj obj;
     bool ownChars;
     int length;
+    uint32_t hash;
     char chars[];
 };
 
 ObjString* makeString(int length);
 ObjString* copyString(const char* chars, int length);
+void hashStringObj(ObjString* string);
+void internedString(ObjString* string);
 void printObject(Value value);
 
 static inline bool isObjType(Value value, ObjType type) {
