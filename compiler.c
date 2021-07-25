@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "common.h"
 #include "compiler.h"
@@ -39,7 +40,19 @@ typedef struct {
     Precedence precedence;
 } ParseRule;
 
+typedef struct {
+    Token name;
+    int depth;
+} Local;
+
+typedef struct {
+    Local locals[UINT8_COUNT];
+    int localCount;
+    int scopeDepth;
+} Compiler;
+
 Parser parser;
+Compiler* current = NULL;
 Chunk* compilingChunk;
 
 static Chunk* currentChunk() {
@@ -109,6 +122,24 @@ static void emitConstant(Value value) {
     writeConstant(currentChunk(), value, parser.previous.line);
 }
 
+static void patchJump(int offset) {
+    // -2 to adjust for the bytecode for the jump offset itself.
+    int jump = currentChunk()->count - offset - 2;
+
+    if (jump > UINT16_MAX) {
+        error("Masyadong maraming nilalaman upang puntahan.");
+    }
+
+    currentChunk()->code[offset] = (jump >> 8) & 0xff;
+    currentChunk()->code[offset + 1] = jump & 0xff;
+}
+
+static void initCompiler(Compiler* compiler) {
+    compiler->localCount = 0;
+    compiler->scopeDepth = 0;
+    current = compiler;
+}
+
 static void emitByte(uint8_t byte) {
     writeChunk(currentChunk(), byte, parser.previous.line);
 }
@@ -116,6 +147,23 @@ static void emitByte(uint8_t byte) {
 static void emitBytes(uint8_t byte1, uint8_t byte2) {
     emitByte(byte1);
     emitByte(byte2);
+}
+
+static void emitLoop(int loopStart) {
+    emitByte(OP_LOOP);
+
+    int offset = currentChunk()->count - loopStart + 2;
+    if (offset > UINT16_MAX) error("Masyadong marami ang nilalaman ng pahayag.");
+
+    emitByte((offset >> 8) & 0xff);
+    emitByte(offset & 0xff);
+}
+
+static int emitJump(uint8_t instruction) {
+    emitByte(instruction);
+    emitByte(0xff);
+    emitByte(0xff);
+    return currentChunk()->count - 2;
 }
 
 static void emitReturn() {
@@ -141,6 +189,21 @@ static void endCompiler() {
 #endif
 }
 
+static void beginScope() {
+    current->scopeDepth++;
+}
+
+static void endScope() {
+    current->scopeDepth--;
+
+    while (current->localCount > 0 &&
+            current->locals[current->localCount - 1].depth >
+                current->scopeDepth) {
+        emitByte(OP_POP);
+        current->localCount--;
+    }
+}
+
 static void expression();
 static void statement();
 static void declaration();
@@ -150,6 +213,77 @@ static void parsePrecedence(Precedence precedence);
 static uint8_t identifierConstant(Token* name) {
     return makeConstant(OBJ_VAL(copyString(name->start,
                                             name->length)));
+}
+
+static bool identifiersEqual(Token* a, Token* b) {
+    if (a->length != b->length) return false;
+    return memcmp(a->start, b->start, a->length) == 0;
+}
+
+static int resolveLocal(Compiler* compiler, Token* name) {
+    for (int i = compiler->localCount - 1; i >= 0; i--) {
+        Local* local = &compiler->locals[i];
+        if (identifiersEqual(name, &local->name)) {
+            if (local->depth == -1) {
+                error("Hindi mabasa ang laman ng lagayan kasabay ng pagdeklara nito.");
+            }
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+
+static int getLocalVariable(Token* name) {
+    return resolveLocal(current, name);
+}
+
+static uint8_t resolveGetOp(int* arg, Token* name) {
+    if (*arg != -1) {
+        return OP_GET_LOCAL;
+    } else {
+        *arg = identifierConstant(name);
+        return OP_GET_GLOBAL;
+    }
+}
+
+static uint8_t resolveSetOp(int* arg, Token* name) {
+    if (*arg != -1) {
+        return OP_SET_LOCAL;
+    } else {
+        *arg = identifierConstant(name);
+        return OP_SET_GLOBAL;
+    }
+}
+
+static void addLocal(Token name) {
+    if (current->localCount == UINT8_COUNT) {
+        error("Masyadong maraming lalagyan ng halaga sa kasalukuyang gawain.");
+        return;
+    }
+
+    Local* local = &current->locals[current->localCount++];
+    local->name = name;
+    local->depth = -1;
+}
+
+static void declareVariable() {
+    if (current->scopeDepth == 0) return;
+
+    Token* name = &parser.previous;
+    for (int i = current->localCount - 1; i >= 0; i--) {
+        Local* local = &current->locals[i];
+        if (local->depth != -1 && local->depth < current->scopeDepth) {
+            break;
+        }
+
+        if (identifiersEqual(name, &local->name)) {
+            error("Mayroon ng nagngangalang ganitong lagayan sa kasalukuyang nasasakupan.");
+        }
+    }
+
+    addLocal(*name);
 }
 
 static void binary(bool canAssign) {
@@ -192,6 +326,26 @@ static void number(bool canAssign) {
     emitConstant(NUMBER_VAL(value));
 }
 
+static void and_(bool canAssign) {
+    int endJump = emitJump(OP_JUMP_IF_FALSE);
+
+    emitByte(OP_POP);
+    parsePrecedence(PREC_AND);
+
+    patchJump(endJump);
+}
+
+static void or_(bool canAssign) {
+    int elseJump = emitJump(OP_JUMP_IF_FALSE);
+    int endJump = emitJump(OP_JUMP);
+
+    patchJump(elseJump);
+    emitByte(OP_POP);
+
+    parsePrecedence(PREC_OR);
+    patchJump(endJump);
+}
+
 static void string(bool canAssign) {
     emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, parser.previous.length - 2)));
 }
@@ -214,30 +368,33 @@ static void incrementRule(TokenType operatorType, bool canAssign, bool isPostfix
     incRule(canAssign);
 
     // Set the value to global variable.
-    uint8_t arg = identifierConstant(&parser.previous);
-    emitBytes(OP_SET_GLOBAL, arg);
+    int arg = getLocalVariable(&parser.previous);
+    uint8_t setOp = resolveSetOp(&arg, &parser.previous);
+    emitBytes(setOp, (uint8_t)arg);
 
     if (isPostfix) advance(); // Consume the Token ++ or --.
 }
 
 static void namedVariable(Token name, bool canAssign) {
-    uint8_t arg = identifierConstant(&name);
+    int arg = getLocalVariable(&name);
+    uint8_t getOp = resolveGetOp(&arg, &name);
+    uint8_t setOp = resolveSetOp(&arg, &name);
 
     if (canAssign) {
         if (match(TOKEN_KATUMBAS)) {
             expression();
-            emitBytes(OP_SET_GLOBAL, arg);
+            emitBytes(setOp, (uint8_t)arg);
         } else if (check(TOKEN_BAWAS_ISA)) {
-            emitBytes(OP_GET_GLOBAL, arg);
+            emitBytes(getOp, (uint8_t)arg);
             incrementRule(TOKEN_BAWAS_ISA, canAssign, true);
         } else if (check(TOKEN_DAGDAG_ISA)) {
-            emitBytes(OP_GET_GLOBAL, arg);
+            emitBytes(getOp, (uint8_t)arg);
             incrementRule(TOKEN_DAGDAG_ISA, canAssign, true);
         } else {
-            emitBytes(OP_GET_GLOBAL, arg);    
+            emitBytes(getOp, (uint8_t)arg);
         }
     } else {
-        emitBytes(OP_GET_GLOBAL, arg);
+        emitBytes(getOp, (uint8_t)arg);
     }
 }
 
@@ -287,7 +444,7 @@ ParseRule rules[] = {
     [TOKEN_PAGKAKAKILANLAN]  = {variable,  NULL,      PREC_NONE},
     [TOKEN_SALITA]           = {string,    NULL,      PREC_NONE},
     [TOKEN_NUMERO]           = {number,    NULL,      PREC_NONE},
-    [TOKEN_AT]               = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_AT]               = {NULL,      and_,      PREC_AND},
     [TOKEN_GAWAIN]           = {NULL,      NULL,      PREC_NONE},
     [TOKEN_GAWIN]            = {NULL,      NULL,      PREC_NONE},
     [TOKEN_HABANG]           = {NULL,      NULL,      PREC_NONE},
@@ -302,9 +459,8 @@ ParseRule rules[] = {
     [TOKEN_KUNG]             = {NULL,      NULL,      PREC_NONE},
     [TOKEN_MALI]             = {literal,   NULL,      PREC_NONE},
     [TOKEN_MULA]             = {NULL,      NULL,      PREC_NONE},
-    [TOKEN_NGUNIT_KUNG]      = {NULL,      NULL,      PREC_NONE},
     [TOKEN_NULL]             = {literal,   NULL,      PREC_NONE},
-    [TOKEN_O]                = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_O]                = {NULL,      or_,       PREC_OR},
     [TOKEN_TAMA]             = {literal,   NULL,      PREC_NONE},
     [TOKEN_URI]              = {NULL,      NULL,      PREC_NONE},
     [TOKEN_URONG]            = {NULL,      NULL,      PREC_NONE},
@@ -338,10 +494,24 @@ static void parsePrecedence(Precedence precedence) {
 
 static uint8_t parseVariable(const char* errorMessage) {
     consume(TOKEN_PAGKAKAKILANLAN, errorMessage);
+
+    declareVariable();
+    if (current->scopeDepth > 0) return 0;
+
     return identifierConstant(&parser.previous);
 }
 
+static void markInitialized() {
+    current->locals[current->localCount - 1].depth =
+        current->scopeDepth;
+}
+
 static void defineVariable(uint8_t global) {
+    if (current->scopeDepth > 0) {
+        markInitialized();
+        return;
+    }
+
     emitBytes(OP_DEFINE_GLOBAL, global);
 }
 
@@ -351,6 +521,14 @@ static ParseRule* getRule(TokenType type) {
 
 static void expression() {
     parsePrecedence(PREC_ASSIGNMENT);
+}
+
+static void block() {
+    while (!check(TOKEN_DULONG_URONG) && !check(TOKEN_DULO)) {
+        declaration();
+    }
+
+    consume(TOKEN_DULONG_URONG, "Mali ang porma ng urong ng mga pahayag.");
 }
 
 static void varDeclaration() {
@@ -375,11 +553,89 @@ static void expressionStatement() {
     emitByte(OP_POP);
 }
 
+static void forStatement() {
+    beginScope();
+    consume(TOKEN_KALIWANG_PAREN, "Inasahan na makakita ng '(' matapos ang 'kada'.");
+    if (match(TOKEN_TULDOK_KUWIT)) {
+        // No initializer.
+    } else if (match(TOKEN_KILALANIN)) {
+        varDeclaration();
+    } else {
+        expressionStatement();
+    }
+
+    int loopStart = currentChunk()->count;
+    int exitJump = -1;
+    if (!match(TOKEN_TULDOK_KUWIT)) {
+        expression();
+        consume(TOKEN_TULDOK_KUWIT, "Inasahan na makakita ng ';' matapos ang kondisyon.");
+
+        // Jump out of the loop if the condition is false.
+        exitJump = emitJump(OP_JUMP_IF_FALSE);
+        emitByte(OP_POP); // Condition.                    
+    }
+
+    if (!match(TOKEN_KANANG_PAREN)) {
+        int bodyJump = emitJump(OP_JUMP);
+        int incrementStart = currentChunk()->count;
+        expression();
+        emitByte(OP_POP);
+        consume(TOKEN_KANANG_PAREN, "Inasahan na makakita ng ')' matapos ang mga payahag sa 'kada'.");
+
+        emitLoop(loopStart);
+        loopStart = incrementStart;
+        patchJump(bodyJump);
+    }
+
+    statement();
+    emitLoop(loopStart);
+
+    if (exitJump != -1) {
+        patchJump(exitJump);
+        emitByte(OP_POP); // Condition.
+    }
+
+    endScope();
+}
+
+static void ifStatement() {
+    consume(TOKEN_KALIWANG_PAREN, "Inasahan na makakita ng '(' matapos ang 'kung'.");
+    expression();
+    consume(TOKEN_KANANG_PAREN, "Inasahan na makakita ng ')' matapos ang kundisyon.");
+
+    int thenJump = emitJump(OP_JUMP_IF_FALSE);
+    emitByte(OP_POP);
+    statement();
+    int elseJump = emitJump(OP_JUMP);
+
+    patchJump(thenJump);
+    emitByte(OP_POP);
+
+    if (match(TOKEN_KUNDIMAN)) statement();
+
+    patchJump(elseJump);
+}
+
 static void printStatement() {
     expression();
     consume(TOKEN_TULDOK_KUWIT, 
-        "Inasahan na makakita ng ';' pagtapos ng nilalaman.");
+        "Inasahan na makakita ng ';' matapos ng nilalaman.");
     emitByte(OP_PRINT);
+}
+
+static void whileStatement() {
+    int loopStart = currentChunk()->count;
+    consume(TOKEN_KALIWANG_PAREN, "Inasahan na makakita ng '(' matapos ang 'habang'.");
+    expression();
+    consume(TOKEN_KANANG_PAREN, "Inasahan na makakita ng ')' matapos ang kondisyon.");
+
+    int exitJump = emitJump(OP_JUMP_IF_FALSE);
+    emitByte(OP_POP);
+    statement();
+    emitLoop(loopStart);
+
+    patchJump(exitJump);
+    emitByte(OP_POP);
 }
 
 static void synchronize() {
@@ -420,6 +676,16 @@ static void declaration() {
 static void statement() {
     if (match(TOKEN_IPAKITA)) {
         printStatement();
+    } else if (match(TOKEN_KADA)) {
+        forStatement();
+    } else if(match(TOKEN_KUNG)) {
+        ifStatement();
+    } else if (match(TOKEN_HABANG)) {
+        whileStatement();
+    } else if (match(TOKEN_URONG)) {
+        beginScope();
+        block();
+        endScope();
     } else {
         expressionStatement();
     }
@@ -427,6 +693,8 @@ static void statement() {
 
 bool compile(const char* source, Chunk* chunk) {
     initScanner(source);
+    Compiler compiler;
+    initCompiler(&compiler);
     compilingChunk = chunk;
 
     parser.hadError = false;

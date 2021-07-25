@@ -89,13 +89,17 @@ static bool toDedent() {
 static Token makeIndent() {
     scanner.indentOffset++;
     scanner.start = scanner.current - scanner.spaceCount;
-    return makeToken(TOKEN_URONG);
+    Token token = makeToken(TOKEN_URONG);
+    scanner.start = scanner.current;
+    return token;
 }
 
 static Token makeDedent() {
     scanner.indentOffset--;
     scanner.start = scanner.current - scanner.spaceCount;
-    return makeToken(TOKEN_DULONG_URONG);
+    Token token = makeToken(TOKEN_DULONG_URONG);
+    scanner.start = scanner.current;
+    return token;
 }
 
 static Token handleWhiteSpace() {
@@ -106,7 +110,7 @@ static Token handleWhiteSpace() {
         switch (c) {
             case ' ':
             case '\r':
-            case '\t':
+            case '\t': {
                 advance();
                 if (scanner.spaceCount == -1) scanner.spaceCount = 0;
                 scanner.spaceCount += c == '\t' ? TAB_SPACE : 1;
@@ -114,11 +118,14 @@ static Token handleWhiteSpace() {
                 if (scanner.spaceCount % TAB_SPACE != 0) {
                     break;
                 }
-                
-                if (toIndent()) return makeIndent();
+
+                if (toIndent()) {
+                    return makeIndent();
+                }
                 else if (toDedent()) return makeDedent();
-                
+
                 break;
+            }
             case '\n':
                 advance();
                 scanner.line++;
@@ -137,6 +144,8 @@ static Token handleWhiteSpace() {
             default:
                 if (scanner.spaceCount % TAB_SPACE != 0)
                     errorToken("Mali ang bilang ng urong.");
+                // Make spaceCount zero if exited after newline.
+                scanner.spaceCount = scanner.spaceCount == 0 ? 0 : -1;
                 return makeToken(TOKEN_PATLANG);
         }
     }
@@ -146,6 +155,7 @@ static TokenType checkKeyword(int start, int length,
         const char* rest, TokenType type) {
     if (scanner.current - scanner.start == start + length &&
         memcmp(scanner.start + start, rest, length) == 0) {
+
         return type;
     }
 
@@ -186,8 +196,8 @@ static TokenType identifierType() {
                     case 'i': return checkKeyword(2, 7, "lalanin", TOKEN_KILALANIN);
                     case 'u': 
                         switch (scanner.start[3]) {
-                            case 'd': return checkKeyword(3, 6, "ndiman", TOKEN_KUNDIMAN);
-                            case 'g': return checkKeyword(3, 2, "ng", TOKEN_KUNG);
+                            case 'd': return checkKeyword(2, 6, "ndiman", TOKEN_KUNDIMAN);
+                            case 'g': return checkKeyword(2, 2, "ng", TOKEN_KUNG);
                         }
                         break;
                 }
@@ -200,13 +210,7 @@ static TokenType identifierType() {
                     case 'u': return checkKeyword(2, 2, "la", TOKEN_MULA);
                 }
             }
-        case 'n':
-            if (scanner.current - scanner.start > 1) {
-                switch (scanner.start[1]) {
-                    case 'g': return checkKeyword(2, 9, "unit_kung", TOKEN_NGUNIT_KUNG);
-                    case 'u': return checkKeyword(2, 2, "ll", TOKEN_NULL);
-                }
-            }
+        case 'n': return checkKeyword(1, 3, "ull", TOKEN_NULL);
         case 'o': return TOKEN_O;
         case 't': return checkKeyword(1, 3, "ama", TOKEN_TAMA);
         case 'u': return checkKeyword(1, 2, "ri", TOKEN_URI);
@@ -249,13 +253,14 @@ static Token string() {
 
 Token scanToken() {
     Token indentToken = handleWhiteSpace();
-    if (indentToken.type != TOKEN_PATLANG && indentToken.type != TOKEN_PROBLEMA)
+    if (indentToken.type != TOKEN_PATLANG && indentToken.type != TOKEN_PROBLEMA) {
         return indentToken;
-    else if (scanner.spaceCount % TAB_SPACE == 0 && toDedent())
+    } else if (((scanner.spaceCount % TAB_SPACE == 0) || (isAtEnd() && scanner.indentOffset > 0)) 
+                && toDedent()) {
         return makeDedent();
+    }
 
     scanner.start = scanner.current;
-
     if (isAtEnd()) return makeToken(TOKEN_DULO);
 
     char c = advance();
