@@ -175,6 +175,16 @@ static InterpretResult run() {
                 break;
             }
             case OP_SUBTRACT:   BINARY_OP(NUMBER_VAL, -); break;
+            case OP_MODULO: {
+                if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) {
+                    runtimeError("Inasahan na parehas na numero ang gamit.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                int b = AS_NUMBER(pop());
+                int a = AS_NUMBER(pop());
+                push(NUMBER_VAL(a % b));
+                break;
+            }
             case OP_MULTIPLY:   BINARY_OP(NUMBER_VAL, *); break;
             case OP_DIVIDE:     BINARY_OP(NUMBER_VAL, /); break;
             case OP_NOT:

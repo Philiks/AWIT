@@ -239,24 +239,6 @@ static int getLocalVariable(Token* name) {
     return resolveLocal(current, name);
 }
 
-static uint8_t resolveGetOp(int* arg, Token* name) {
-    if (*arg != -1) {
-        return OP_GET_LOCAL;
-    } else {
-        *arg = identifierConstant(name);
-        return OP_GET_GLOBAL;
-    }
-}
-
-static uint8_t resolveSetOp(int* arg, Token* name) {
-    if (*arg != -1) {
-        return OP_SET_LOCAL;
-    } else {
-        *arg = identifierConstant(name);
-        return OP_SET_GLOBAL;
-    }
-}
-
 static void addLocal(Token name) {
     if (current->localCount == UINT8_COUNT) {
         error("Masyadong maraming lalagyan ng halaga sa kasalukuyang gawain.");
@@ -300,6 +282,7 @@ static void binary(bool canAssign) {
         case TOKEN_BABA_PAREHO:     emitBytes(OP_GREATER, OP_NOT); break;
         case TOKEN_DAGDAG:          emitByte(OP_ADD); break;
         case TOKEN_BAWAS:           emitByte(OP_SUBTRACT); break;
+        case TOKEN_MODULO:          emitByte(OP_MODULO); break;
         case TOKEN_BITUIN:          emitByte(OP_MULTIPLY); break;
         case TOKEN_PAHILIS:         emitByte(OP_DIVIDE); break;
         default: return; // Unreachable.
@@ -369,7 +352,14 @@ static void incrementRule(TokenType operatorType, bool canAssign, bool isPostfix
 
     // Set the value to global variable.
     int arg = getLocalVariable(&parser.previous);
-    uint8_t setOp = resolveSetOp(&arg, &parser.previous);
+    uint8_t setOp;
+    if (arg != -1) {
+        setOp = OP_SET_LOCAL;
+    } else {
+        arg = identifierConstant(&parser.previous);
+        setOp = OP_SET_GLOBAL;
+    }
+    
     emitBytes(setOp, (uint8_t)arg);
 
     if (isPostfix) advance(); // Consume the Token ++ or --.
@@ -377,8 +367,15 @@ static void incrementRule(TokenType operatorType, bool canAssign, bool isPostfix
 
 static void namedVariable(Token name, bool canAssign) {
     int arg = getLocalVariable(&name);
-    uint8_t getOp = resolveGetOp(&arg, &name);
-    uint8_t setOp = resolveSetOp(&arg, &name);
+    uint8_t getOp, setOp;
+    if (arg != -1) {
+        getOp = OP_GET_LOCAL;
+        setOp = OP_SET_LOCAL;
+    } else {
+        arg = identifierConstant(&name);
+        getOp = OP_GET_GLOBAL;
+        setOp = OP_SET_GLOBAL;
+    }
 
     if (canAssign) {
         if (match(TOKEN_KATUMBAS)) {
@@ -429,6 +426,7 @@ ParseRule rules[] = {
     [TOKEN_TULDOK_KUWIT]     = {NULL,      NULL,      PREC_NONE},
     [TOKEN_PAHILIS]          = {NULL,      binary,    PREC_FACTOR},
     [TOKEN_BITUIN]           = {NULL,      binary,    PREC_FACTOR},
+    [TOKEN_MODULO]           = {NULL,      binary,    PREC_FACTOR},
     [TOKEN_BAWAS]            = {unary,     binary,    PREC_TERM},
     [TOKEN_BAWAS_ISA]        = {unary,     decrement, PREC_POST_INC},
     [TOKEN_DAGDAG]           = {NULL,      binary,    PREC_TERM},

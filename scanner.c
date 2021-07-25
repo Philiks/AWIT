@@ -275,6 +275,7 @@ Token scanToken() {
         case '.': return makeToken(TOKEN_TULDOK);
         case '/': return makeToken(TOKEN_PAHILIS);
         case '*': return makeToken(TOKEN_BITUIN);
+        case '%': return makeToken(TOKEN_MODULO);
         case '-': 
             return makeToken(
                 match('-') ? TOKEN_BAWAS_ISA : TOKEN_BAWAS);
