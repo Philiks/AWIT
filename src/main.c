@@ -68,7 +68,7 @@ int main(int argc, const char* argv[]) {
     } else if (argc == 2) {
         runFile(argv[1]);
     } else {
-        fprintf(stderr, "Tamang pagtawag: cawit [lokasyon]");
+        fprintf(stderr, "Tamang pagtawag: awit [lokasyon]");
         exit(64);
     }
 

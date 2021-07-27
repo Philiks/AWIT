@@ -1,5 +1,5 @@
-#ifndef cawit_vm_h
-#define cawit_vm_h
+#ifndef awit_vm_h
+#define awit_vm_h
 
 #include "chunk.h"
 #include "table.h"

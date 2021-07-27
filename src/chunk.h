@@ -1,5 +1,5 @@
-#ifndef cawit_chunk_h
-#define cawit_chunk_h
+#ifndef awit_chunk_h
+#define awit_chunk_h
 
 #include "common.h"
 #include "value.h"

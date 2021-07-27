@@ -1,5 +1,5 @@
-#ifndef cawit_memory_h
-#define cawit_memory_h
+#ifndef awit_memory_h
+#define awit_memory_h
 
 #include "common.h"
 #include "object.h"

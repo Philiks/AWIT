@@ -1,5 +1,5 @@
-#ifndef cawit_debug_h
-#define cawit_debug_h
+#ifndef awit_debug_h
+#define awit_debug_h
 
 #include "chunk.h"
 

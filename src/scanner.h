@@ -1,5 +1,5 @@
-#ifndef cawit_scanner_h
-#define cawit_scanner_h
+#ifndef awit_scanner_h
+#define awit_scanner_h
 
 typedef enum {
     // Single-character tokens.

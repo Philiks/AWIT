@@ -1,5 +1,5 @@
-#ifndef cawit_object_h
-#define cawit_object_h
+#ifndef awit_object_h
+#define awit_object_h
 
 #include "common.h"
 #include "value.h"

@@ -1,5 +1,5 @@
-#ifndef cawit_compiler_h
-#define cawit_compiler_h
+#ifndef awit_compiler_h
+#define awit_compiler_h
 
 #include "object.h"
 #include "vm.h"

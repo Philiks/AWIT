@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-I.
-OUTPUT=cawit
+OUTPUT=awit
 OBJ=main.o chunk.o compiler.o debug.o memory.o object.o scanner.o table.o value.o vm.o
 DEPS=chunk.h common.h compiler.h debug.h memory.h object.h scanner.h table.h value.h vm.h
 
