@@ -60,20 +60,61 @@ static bool isFalsey(Value value) {
     return IS_NULL(value) || (IS_BOOL(value) && !AS_BOOL(value)); 
 }
 
-static void concatenate() {
-    ObjString* b = AS_STRING(pop());
-    ObjString* a = AS_STRING(pop());
+static int numDigits(const unsigned n) {
+    if (n < 10) return 1;
+    return 1 + numDigits(n / 10);
+}
+
+static ObjString* toString(Value value) {
+    ObjString* string;
+
+    switch (value.type) {
+        case VAL_BOOL: {
+            string = makeString(true, AS_BOOL(value) ? "tama" : "mali", 4);
+            return string;
+        }
+        case VAL_NULL: {
+            string = makeString(true, "null", 4);
+            return string;
+        }
+        case VAL_NUMBER: {
+            // + 1 for terminating '\0' when turned to string.
+            int numOfDigits = numDigits(AS_NUMBER(value)) + 1;
+            char numInStr[numOfDigits];
+            snprintf(numInStr, numOfDigits, "%f", AS_NUMBER(value));
+            
+            string = makeString(true, numInStr, numOfDigits);
+            return string;
+        }
+        case VAL_OBJ: return AS_STRING(value);
+        default: {
+            runtimeError(
+                "Ang nilalaman ay hindi magawang salita.");
+            return NULL;
+        }
+    }
+}
+
+static bool concatenate() {
+    // ObjString* b = AS_STRING(pop());
+    // ObjString* a = AS_STRING(pop());
+    ObjString* b = toString(pop());
+    ObjString* a = toString(pop());
+
+    if (b == NULL || a == NULL) return false;
 
     int length = a->length + b->length;
-    ObjString* result = makeString(length);
-    memcpy(result->chars, a->chars, a->length);
-    memcpy(result->chars + a->length, b->chars, b->length);
-    result->chars[length] = '\0';
+    char* chars = ALLOCATE(char, length);
+    memcpy(chars, a->chars, a->length);
+    memcpy(chars + a->length, b->chars, b->length);
+    chars[length] = '\0';
     
+    ObjString* result = makeString(true, chars, length);
     hashStringObj(result);
     internedString(result);
     
     push(OBJ_VAL(result));
+    return true;
 }
 
 static InterpretResult run() {
@@ -163,14 +204,18 @@ static InterpretResult run() {
             case OP_GREATER:    BINARY_OP(BOOL_VAL, >); break;
             case OP_LESS:       BINARY_OP(BOOL_VAL, <); break;
             case OP_ADD: {
-                if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
-                    concatenate();
-                } else if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
+                // if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
+                    // concatenate();
+                // } else 
+                if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
                     BINARY_OP(NUMBER_VAL, +); break;
                 } else {
-                    runtimeError(
-                        "Inasahan na parehong numero o parehong salita ang mga gamit.");
-                    return INTERPRET_RUNTIME_ERROR;
+                    // runtimeError(
+                    //     "Inasahan na parehong numero o parehong salita ang mga gamit.");
+                    // return INTERPRET_RUNTIME_ERROR;
+                    if(!concatenate()) {
+                        return INTERPRET_RUNTIME_ERROR;
+                    }
                 }
                 break;
             }
