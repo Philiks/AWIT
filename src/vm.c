@@ -60,30 +60,24 @@ static bool isFalsey(Value value) {
     return IS_NULL(value) || (IS_BOOL(value) && !AS_BOOL(value)); 
 }
 
-static int numDigits(const unsigned n) {
-    if (n < 10) return 1;
-    return 1 + numDigits(n / 10);
-}
-
 static ObjString* toString(Value value) {
     ObjString* string;
 
     switch (value.type) {
         case VAL_BOOL: {
-            string = makeString(true, AS_BOOL(value) ? "tama" : "mali", 4);
+            string = makeString(false, AS_BOOL(value) ? "tama" : "mali", 4);
             return string;
         }
         case VAL_NULL: {
-            string = makeString(true, "null", 4);
+            string = makeString(false, "null", 4);
             return string;
         }
         case VAL_NUMBER: {
-            // + 1 for terminating '\0' when turned to string.
-            int numOfDigits = numDigits(AS_NUMBER(value)) + 1;
-            char numInStr[numOfDigits];
-            snprintf(numInStr, numOfDigits, "%f", AS_NUMBER(value));
+            int length = 50;
+            char numInStr[length];
+            length = snprintf(numInStr, length, "%g", AS_NUMBER(value));
             
-            string = makeString(true, numInStr, numOfDigits);
+            string = makeString(false, numInStr, length);
             return string;
         }
         case VAL_OBJ: return AS_STRING(value);
@@ -96,8 +90,6 @@ static ObjString* toString(Value value) {
 }
 
 static bool concatenate() {
-    // ObjString* b = AS_STRING(pop());
-    // ObjString* a = AS_STRING(pop());
     ObjString* b = toString(pop());
     ObjString* a = toString(pop());
 
@@ -110,8 +102,6 @@ static bool concatenate() {
     chars[length] = '\0';
     
     ObjString* result = makeString(true, chars, length);
-    hashStringObj(result);
-    internedString(result);
     
     push(OBJ_VAL(result));
     return true;
