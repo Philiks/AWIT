@@ -22,14 +22,13 @@ struct Obj {
 
 struct ObjString {
     Obj obj;
-    bool ownChars;
-    int length;
+    bool ownsChars : 1;
+    int length : 15;
     uint32_t hash;
-    char chars[];
+    const char* chars;
 };
 
-ObjString* makeString(int length);
-ObjString* copyString(const char* chars, int length);
+ObjString* makeString(bool ownsChars, char* chars, int length);
 void hashStringObj(ObjString* string);
 void internedString(ObjString* string);
 void printObject(Value value);
