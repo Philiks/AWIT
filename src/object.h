@@ -29,8 +29,6 @@ struct ObjString {
 };
 
 ObjString* makeString(bool ownsChars, char* chars, int length);
-void hashStringObj(ObjString* string);
-void internedString(ObjString* string);
 void printObject(Value value);
 
 static inline bool isObjType(Value value, ObjType type) {

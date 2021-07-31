@@ -28,37 +28,24 @@ static uint32_t hashString(const char* key, int length) {
     return hash;
 }
 
-static void hashStringObjSet(ObjString* string, uint32_t hash) {
-    string->hash = hash;
-    tableSet(&vm.strings, string, NULL_VAL);
-}
-
 ObjString* makeString(bool ownsChars, char* chars, int length) {
     uint32_t hash = hashString(chars, length);
     ObjString* interned = tableFindString(&vm.strings, chars, length,
                                             hash);
-    if (interned != NULL) return interned;
+    if (interned != NULL) {
+        if (ownsChars) {
+            FREE_ARRAY(chars);
+        }
+        return interned;
+    }
     
     ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
     string->ownsChars = ownsChars;
     string->length = length;
     string->chars = chars;
-
-    hashStringObjSet(string, hash);
+    string->hash = hash;
+    tableSet(&vm.strings, string, NULL_VAL);
     return string;
-}
-
-void hashStringObj(ObjString* string) {
-    hashStringObjSet(string, hashString(string->chars, string->length));
-}
-
-void internedString(ObjString* string) {
-    ObjString* interned = tableFindString(&vm.strings, string->chars, 
-                                        string->length, string->hash);
-    if (interned != NULL) {
-        FREE(string);
-        string = interned;
-    }
 }
 
 void printObject(Value value) {
