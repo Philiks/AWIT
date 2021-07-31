@@ -18,7 +18,10 @@ static void freeObject(Obj* object) {
     switch (object->type) {
         case OBJ_STRING: {
             ObjString* string = (ObjString*)object;
-            reallocate(string, 0);
+            if (string->ownsChars) {
+                FREE_ARRAY((char*)string->chars);
+            }
+            FREE(object);
             break;
         }
     }
