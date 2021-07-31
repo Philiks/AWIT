@@ -234,7 +234,6 @@ static int resolveLocal(Compiler* compiler, Token* name) {
     return -1;
 }
 
-
 static int getLocalVariable(Token* name) {
     return resolveLocal(current, name);
 }
