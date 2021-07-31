@@ -96,7 +96,7 @@ static bool concatenate() {
     if (b == NULL || a == NULL) return false;
 
     int length = a->length + b->length;
-    char* chars = ALLOCATE(char, length);
+    char* chars = ALLOCATE(char, length + 1);
     memcpy(chars, a->chars, a->length);
     memcpy(chars + a->length, b->chars, b->length);
     chars[length] = '\0';
