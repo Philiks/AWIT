@@ -119,9 +119,7 @@ static Token handleWhiteSpace() {
                     break;
                 }
 
-                if (toIndent()) {
-                    return makeIndent();
-                }
+                if (toIndent()) return makeIndent();
                 else if (toDedent()) return makeDedent();
 
                 break;
