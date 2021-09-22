@@ -60,25 +60,22 @@ static bool isFalsey(Value value) {
     return IS_NULL(value) || (IS_BOOL(value) && !AS_BOOL(value)); 
 }
 
-static ObjString* toString(Value value) {
+static ObjString* toString(Value value, char *buffer) {
     ObjString* string;
 
     switch (value.type) {
         case VAL_BOOL: {
-            string = makeString(false, AS_BOOL(value) ? "tama" : "mali", 4);
-            return string;
+            buffer = AS_BOOL(value) ? "tama" : "mali";
+            return makeString(false, buffer, 4);
         }
         case VAL_NULL: {
-            string = makeString(false, "null", 4);
-            return string;
+            buffer = "null";
+            return makeString(false, buffer, 4);
         }
         case VAL_NUMBER: {
-            int length = 50;
-            char numInStr[length];
-            length = snprintf(numInStr, length, "%g", AS_NUMBER(value));
-            
-            string = makeString(false, numInStr, length);
-            return string;
+            int length = VAL_BUFFER_SIZE;
+            length = snprintf(buffer, length, "%g", AS_NUMBER(value));
+            return makeString(false, buffer, length);
         }
         case VAL_OBJ: return AS_STRING(value);
         default: {
@@ -90,13 +87,16 @@ static ObjString* toString(Value value) {
 }
 
 static bool concatenate() {
-    ObjString* b = toString(pop());
-    ObjString* a = toString(pop());
+    char bBuffer[VAL_BUFFER_SIZE];
+    char aBuffer[VAL_BUFFER_SIZE];
+    ObjString* b = toString(pop(), bBuffer);
+    ObjString* a = toString(pop(), aBuffer);
 
     if (b == NULL || a == NULL) return false;
 
     int length = a->length + b->length;
     char* chars = ALLOCATE(char, length + 1);
+ 
     memcpy(chars, a->chars, a->length);
     memcpy(chars + a->length, b->chars, b->length);
     chars[length] = '\0';
