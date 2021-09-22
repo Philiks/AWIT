@@ -483,10 +483,10 @@ static void parsePrecedence(Precedence precedence) {
         advance();
         ParseFn infixRule = getRule(parser.previous.type)->infix;
         infixRule(canAssign);
+    }
 
-        if (canAssign && match(TOKEN_KATUMBAS)) {
-            error("Mali ang itinuturong lalagyan ng halaga.");
-        }
+    if (canAssign && match(TOKEN_KATUMBAS)) {
+        error("Mali ang itinuturong lalagyan ng halaga.");
     }
 }
 
