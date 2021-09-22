@@ -194,19 +194,12 @@ static InterpretResult run() {
             case OP_GREATER:    BINARY_OP(BOOL_VAL, >); break;
             case OP_LESS:       BINARY_OP(BOOL_VAL, <); break;
             case OP_ADD: {
-                // if (IS_STRING(peek(0)) && IS_STRING(peek(1))) {
-                    // concatenate();
-                // } else 
                 if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
                     BINARY_OP(NUMBER_VAL, +); break;
-                } else {
-                    // runtimeError(
-                    //     "Inasahan na parehong numero o parehong salita ang mga gamit.");
-                    // return INTERPRET_RUNTIME_ERROR;
-                    if(!concatenate()) {
-                        return INTERPRET_RUNTIME_ERROR;
-                    }
-                }
+                } else if(!concatenate()) {
+                    runtimeError("Hindi makabuo ng salita gamit.");
+                    return INTERPRET_RUNTIME_ERROR;
+				}
                 break;
             }
             case OP_SUBTRACT:   BINARY_OP(NUMBER_VAL, -); break;
