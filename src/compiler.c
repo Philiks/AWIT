@@ -170,14 +170,9 @@ static void emitReturn() {
     emitByte(OP_RETURN);
 }
 
-static uint8_t makeConstant(Value value) {
+static int makeConstant(Value value) {
     int constant = addConstant(currentChunk(), value);
-    if (constant > UINT8_MAX) {
-        error("Too many constants in one chunk.");
-        return 0;
-    }
-
-    return (uint8_t)constant;
+    return constant;
 }
 
 static void endCompiler() {
@@ -210,7 +205,7 @@ static void declaration();
 static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
 
-static uint8_t identifierConstant(Token* name) {
+static int identifierConstant(Token* name) {
     return makeConstant(OBJ_VAL(makeString(false, (char*)name->start,
                                             name->length)));
 }
@@ -360,7 +355,8 @@ static void incrementRule(TokenType operatorType, bool canAssign, bool isPostfix
         setOp = OP_SET_GLOBAL;
     }
     
-    emitBytes(setOp, (uint8_t)arg);
+    emitByte(setOp);
+    emitConstant(arg);
 
     if (isPostfix) advance(); // Consume the Token ++ or --.
 }
@@ -380,18 +376,23 @@ static void namedVariable(Token name, bool canAssign) {
     if (canAssign) {
         if (match(TOKEN_KATUMBAS)) {
             expression();
-            emitBytes(setOp, (uint8_t)arg);
+            emitByte(setOp);
+            emitConstant(arg);
         } else if (check(TOKEN_BAWAS_ISA)) {
-            emitBytes(getOp, (uint8_t)arg);
+            emitByte(getOp);
+            emitConstant(arg);
             incrementRule(TOKEN_BAWAS_ISA, canAssign, true);
         } else if (check(TOKEN_DAGDAG_ISA)) {
-            emitBytes(getOp, (uint8_t)arg);
+            emitByte(getOp);
+            emitConstant(arg);
             incrementRule(TOKEN_DAGDAG_ISA, canAssign, true);
         } else {
-            emitBytes(getOp, (uint8_t)arg);
+            emitByte(getOp);
+            emitConstant(arg);
         }
     } else {
-        emitBytes(getOp, (uint8_t)arg);
+        emitByte(getOp);
+        emitConstant(arg);
     }
 }
 
@@ -490,7 +491,7 @@ static void parsePrecedence(Precedence precedence) {
     }
 }
 
-static uint8_t parseVariable(const char* errorMessage) {
+static int parseVariable(const char* errorMessage) {
     consume(TOKEN_PAGKAKAKILANLAN, errorMessage);
 
     declareVariable();
@@ -504,13 +505,14 @@ static void markInitialized() {
         current->scopeDepth;
 }
 
-static void defineVariable(uint8_t global) {
+static void defineVariable(int global) {
     if (current->scopeDepth > 0) {
         markInitialized();
         return;
     }
 
-    emitBytes(OP_DEFINE_GLOBAL, global);
+    emitByte(OP_DEFINE_GLOBAL);
+    emitConstant(global);
 }
 
 static ParseRule* getRule(TokenType type) {
@@ -530,7 +532,7 @@ static void block() {
 }
 
 static void varDeclaration() {
-    uint8_t global = parseVariable(
+    int global = parseVariable(
         "Inasahan ang pangalan para sa lalagyan ng nilalaman.");
 
     if (match(TOKEN_KATUMBAS)) {
