@@ -45,7 +45,7 @@ void writeChunk(Chunk* chunk, uint8_t byte, int line) {
 
 void writeConstant(Chunk* chunk, Value value, int line) {
     int index = addConstant(chunk, value);
-    if (index < 256) {
+    if (index < UINT8_MAX) {
         writeChunk(chunk, OP_CONSTANT, line);
         writeChunk(chunk, index, line);
     } else {
