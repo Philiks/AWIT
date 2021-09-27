@@ -28,21 +28,22 @@ static uint32_t hashString(const char* key, int length) {
     return hash;
 }
 
-ObjString* makeString(bool ownsChars, char* chars, int length) {
+ObjString* makeString(int length) {
+    ObjString* string = (ObjString*)allocateObject(
+        sizeof(ObjString) + length + 1, OBJ_STRING);
+    string->length = length;
+    return string;
+}
+
+ObjString* copyString(const char* chars, int length) {
     uint32_t hash = hashString(chars, length);
     ObjString* interned = tableFindString(&vm.strings, chars, length,
                                             hash);
-    if (interned != NULL) {
-        if (ownsChars) {
-            FREE_ARRAY(chars);
-        }
-        return interned;
-    }
+    if (interned != NULL) return interned;
     
-    ObjString* string = ALLOCATE_OBJ(ObjString, OBJ_STRING);
-    string->ownsChars = ownsChars;
-    string->length = length;
-    string->chars = chars;
+    ObjString* string = makeString(length);
+    memcpy(string->chars, chars, length);
+    string->chars[length] = '\0';
     string->hash = hash;
     tableSet(&vm.strings, string, NULL_VAL);
     return string;

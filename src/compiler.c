@@ -218,8 +218,7 @@ static ParseRule* getRule(TokenType type);
 static void parsePrecedence(Precedence precedence);
 
 static int identifierConstant(Token* name) {
-    return makeConstant(OBJ_VAL(makeString(false, (char*)name->start,
-                                            name->length)));
+    return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
 }
 
 static bool identifiersEqual(Token* a, Token* b) {
@@ -332,8 +331,8 @@ static void or_(bool canAssign) {
 }
 
 static void string(bool canAssign) {
-    emitConstant(OBJ_VAL(makeString(false, 
-        (char*)parser.previous.start + 1, parser.previous.length - 2)));
+    emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, 
+                                    parser.previous.length - 2)));
 }
 
 static void decrement(bool canAssign) {

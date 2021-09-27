@@ -66,16 +66,16 @@ static ObjString* toString(Value value, char *buffer) {
     switch (value.type) {
         case VAL_BOOL: {
             buffer = AS_BOOL(value) ? "tama" : "mali";
-            return makeString(false, buffer, 4);
+            return copyString(buffer, 4);
         }
         case VAL_NULL: {
             buffer = "null";
-            return makeString(false, buffer, 4);
+            return copyString(buffer, 4);
         }
         case VAL_NUMBER: {
             int length = VAL_BUFFER_SIZE;
             length = snprintf(buffer, length, "%g", AS_NUMBER(value));
-            return makeString(false, buffer, length);
+            return copyString(buffer, length);
         }
         case VAL_OBJ: return AS_STRING(value);
         default: {
@@ -95,13 +95,10 @@ static bool concatenate() {
     if (b == NULL || a == NULL) return false;
 
     int length = a->length + b->length;
-    char* chars = ALLOCATE(char, length + 1);
- 
-    memcpy(chars, a->chars, a->length);
-    memcpy(chars + a->length, b->chars, b->length);
-    chars[length] = '\0';
-    
-    ObjString* result = makeString(true, chars, length);
+    ObjString* result = makeString(length);
+    memcpy(result->chars, a->chars, a->length);
+    memcpy(result->chars + a->length, b->chars, b->length);
+    result->chars[length] = '\0';
     
     push(OBJ_VAL(result));
     return true;

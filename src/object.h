@@ -25,10 +25,11 @@ struct ObjString {
     bool ownsChars : 1;
     int length : 15;
     uint32_t hash;
-    const char* chars;
+    char chars[];
 };
 
-ObjString* makeString(bool ownsChars, char* chars, int length);
+ObjString* makeString(int length);
+ObjString* copyString(const char* chars, int length);
 void printObject(Value value);
 
 static inline bool isObjType(Value value, ObjType type) {
