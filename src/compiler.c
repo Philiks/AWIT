@@ -149,6 +149,18 @@ static void emitBytes(uint8_t byte1, uint8_t byte2) {
     emitByte(byte2);
 }
 
+static void emitVariable(uint8_t setGetOp, int index) {
+    emitByte(setGetOp);
+
+    if (index < UINT8_MAX) {
+        emitByte((uint8_t)index);
+    } else {
+        emitByte((uint8_t)((index >> 16) & 0xFF));
+        emitBytes((uint8_t)((index >> 8) & 0xFF),
+                  (uint8_t)(index & 0xFF));
+    }
+}
+
 static void emitLoop(int loopStart) {
     emitByte(OP_LOOP);
 
@@ -227,10 +239,6 @@ static int resolveLocal(Compiler* compiler, Token* name) {
     }
 
     return -1;
-}
-
-static int getLocalVariable(Token* name) {
-    return resolveLocal(current, name);
 }
 
 static void addLocal(Token name) {
@@ -346,7 +354,7 @@ static void incrementRule(TokenType operatorType, bool canAssign, bool isPostfix
     incRule(canAssign);
 
     // Set the value to global variable.
-    int arg = getLocalVariable(&parser.previous);
+    int arg = resolveLocal(current, &parser.previous);
     uint8_t setOp;
     if (arg != -1) {
         setOp = OP_SET_LOCAL;
@@ -355,15 +363,13 @@ static void incrementRule(TokenType operatorType, bool canAssign, bool isPostfix
         setOp = OP_SET_GLOBAL;
     }
     
-    emitByte(setOp);
-    emitConstant(arg);
-
+    emitVariable(setOp, arg);
     if (isPostfix) advance(); // Consume the Token ++ or --.
 }
 
 static void namedVariable(Token name, bool canAssign) {
-    int arg = getLocalVariable(&name);
     uint8_t getOp, setOp;
+    int arg = resolveLocal(current, &name);
     if (arg != -1) {
         getOp = OP_GET_LOCAL;
         setOp = OP_SET_LOCAL;
@@ -376,23 +382,18 @@ static void namedVariable(Token name, bool canAssign) {
     if (canAssign) {
         if (match(TOKEN_KATUMBAS)) {
             expression();
-            emitByte(setOp);
-            emitConstant(arg);
+            emitVariable(setOp, arg);
         } else if (check(TOKEN_BAWAS_ISA)) {
-            emitByte(getOp);
-            emitConstant(arg);
+            emitVariable(getOp, arg);
             incrementRule(TOKEN_BAWAS_ISA, canAssign, true);
         } else if (check(TOKEN_DAGDAG_ISA)) {
-            emitByte(getOp);
-            emitConstant(arg);
+            emitVariable(getOp, arg);
             incrementRule(TOKEN_DAGDAG_ISA, canAssign, true);
         } else {
-            emitByte(getOp);
-            emitConstant(arg);
+            emitVariable(getOp, arg);
         }
     } else {
-        emitByte(getOp);
-        emitConstant(arg);
+        emitVariable(getOp, arg);
     }
 }
 
@@ -511,8 +512,7 @@ static void defineVariable(int global) {
         return;
     }
 
-    emitByte(OP_DEFINE_GLOBAL);
-    emitConstant(global);
+    emitBytes(OP_DEFINE_GLOBAL, global);
 }
 
 static ParseRule* getRule(TokenType type) {
