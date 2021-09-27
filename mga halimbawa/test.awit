@@ -1,6 +1,6 @@
 kilalanin edad = 21;
 kilalanin address = 21;
 kilalanin totoo = tama;
-
+kilalanin edad = 100;
 
 ipakita "Ang iyong edad ay: " + (edad + 1 + 1);
