@@ -343,16 +343,27 @@ static void increment(bool canAssign) {
     emitByte(OP_ADD);
 }
 
-static void incrementRule(TokenType operatorType, bool canAssign, bool isPostfix) {
+static void postfixIncDec(int varIndex, uint8_t getOp, uint8_t setOp) {
+    ParseFn incRule = getRule(parser.current.type)->infix;
+
+    // Current look of stack after function call.
+    //                             // <varUnchanged>
+    emitVariable(getOp, varIndex); // <varUnchanged> <varUnchanged>
+    emitConstant(NUMBER_VAL(1));   // <varUnchanged> <varUnchanged> 1
+    incRule(false);                // <varUnchanged> <varUnchanged> 1 <++/-->
+    emitVariable(setOp, varIndex); // <varUnchanged> <varChanged>
+    emitByte(OP_POP);              // <varUnchanged>
+    advance(); // Consume ++ or --.
+}
+
+static void prefixIncDec(TokenType operatorType) {
     ParseFn incRule = getRule(operatorType)->infix;
 
-    // Put "1" on to the stack.
-    emitConstant(NUMBER_VAL(1));
+    // Current look of stack after function call.
+    //                             // <varUnchanged>
+    emitConstant(NUMBER_VAL(1));   // <varUnchanged> 1
+    incRule(false);                // <varUnchanged> 1 <++/-->
 
-    // Apply increment() or decrement().
-    incRule(canAssign);
-
-    // Set the value to global variable.
     int arg = resolveLocal(current, &parser.previous);
     uint8_t setOp;
     if (arg != -1) {
@@ -362,8 +373,7 @@ static void incrementRule(TokenType operatorType, bool canAssign, bool isPostfix
         setOp = OP_SET_GLOBAL;
     }
     
-    emitVariable(setOp, arg);
-    if (isPostfix) advance(); // Consume the Token ++ or --.
+    emitVariable(setOp, arg);      // <varChanged>
 }
 
 static void namedVariable(Token name, bool canAssign) {
@@ -382,12 +392,9 @@ static void namedVariable(Token name, bool canAssign) {
         if (match(TOKEN_KATUMBAS)) {
             expression();
             emitVariable(setOp, arg);
-        } else if (check(TOKEN_BAWAS_ISA)) {
+        } else if (check(TOKEN_BAWAS_ISA) || check(TOKEN_DAGDAG_ISA)) {
             emitVariable(getOp, arg);
-            incrementRule(TOKEN_BAWAS_ISA, canAssign, true);
-        } else if (check(TOKEN_DAGDAG_ISA)) {
-            emitVariable(getOp, arg);
-            incrementRule(TOKEN_DAGDAG_ISA, canAssign, true);
+            postfixIncDec(arg, getOp, setOp);
         } else {
             emitVariable(getOp, arg);
         }
@@ -412,7 +419,7 @@ static void unary(bool canAssign) {
         case TOKEN_BAWAS: emitByte(OP_NEGATE); break;
         case TOKEN_BAWAS_ISA:
         case TOKEN_DAGDAG_ISA: {
-            incrementRule(operatorType, canAssign, false);
+            prefixIncDec(operatorType);
             break;
         }
         default: return; // Unreachable.
