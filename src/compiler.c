@@ -561,7 +561,8 @@ static void expressionStatement() {
 
 static void forStatement() {
     beginScope();
-    consume(TOKEN_KALIWANG_PAREN, "Inasahan na makakita ng '(' matapos ang 'kada'.");
+    consume(TOKEN_KALIWANG_PAREN, 
+        "Inasahan na makakita ng '(' matapos ang 'kada'.");
     if (match(TOKEN_TULDOK_KUWIT)) {
         // No initializer.
     } else if (match(TOKEN_KILALANIN)) {
@@ -574,7 +575,8 @@ static void forStatement() {
     int exitJump = -1;
     if (!match(TOKEN_TULDOK_KUWIT)) {
         expression();
-        consume(TOKEN_TULDOK_KUWIT, "Inasahan na makakita ng ';' matapos ang kondisyon.");
+        consume(TOKEN_TULDOK_KUWIT, 
+            "Inasahan na makakita ng ';' matapos ang kondisyon.");
 
         // Jump out of the loop if the condition is false.
         exitJump = emitJump(OP_JUMP_IF_FALSE);
@@ -586,7 +588,8 @@ static void forStatement() {
         int incrementStart = currentChunk()->count;
         expression();
         emitByte(OP_POP);
-        consume(TOKEN_KANANG_PAREN, "Inasahan na makakita ng ')' matapos ang mga payahag sa 'kada'.");
+        consume(TOKEN_KANANG_PAREN, 
+            "Inasahan na makakita ng ')' matapos ang mga payahag sa 'kada'.");
 
         emitLoop(loopStart);
         loopStart = incrementStart;
@@ -605,9 +608,11 @@ static void forStatement() {
 }
 
 static void ifStatement() {
-    consume(TOKEN_KALIWANG_PAREN, "Inasahan na makakita ng '(' matapos ang 'kung'.");
+    consume(TOKEN_KALIWANG_PAREN, 
+        "Inasahan na makakita ng '(' matapos ang 'kung'.");
     expression();
-    consume(TOKEN_KANANG_PAREN, "Inasahan na makakita ng ')' matapos ang kundisyon.");
+    consume(TOKEN_KANANG_PAREN, 
+        "Inasahan na makakita ng ')' matapos ang kundisyon.");
 
     int thenJump = emitJump(OP_JUMP_IF_FALSE);
     emitByte(OP_POP);
@@ -631,13 +636,37 @@ static void printStatement() {
 
 static void whileStatement() {
     int loopStart = currentChunk()->count;
-    consume(TOKEN_KALIWANG_PAREN, "Inasahan na makakita ng '(' matapos ang 'habang'.");
+    consume(TOKEN_KALIWANG_PAREN, 
+        "Inasahan na makakita ng '(' matapos ang 'habang'.");
     expression();
-    consume(TOKEN_KANANG_PAREN, "Inasahan na makakita ng ')' matapos ang kondisyon.");
+    consume(TOKEN_KANANG_PAREN, 
+        "Inasahan na makakita ng ')' matapos ang kondisyon.");
 
     int exitJump = emitJump(OP_JUMP_IF_FALSE);
     emitByte(OP_POP);
     statement();
+    emitLoop(loopStart);
+
+    patchJump(exitJump);
+    emitByte(OP_POP);
+}
+
+static void doWhileStatement() {
+    int loopStart = currentChunk()->count;
+    statement();
+
+    consume(TOKEN_HABANG, 
+        "Inaasahan na makakita ng 'habang' matapos ang mga pahayag.");
+    consume(TOKEN_KALIWANG_PAREN, 
+        "Inasahan na makakita ng '(' matapos ang 'habang'.");
+    expression();
+    consume(TOKEN_KANANG_PAREN, 
+        "Inasahan na makakita ng ')' matapos ang kondisyon.");
+    consume(TOKEN_TULDOK_KUWIT, 
+        "Inasahan na makakita ng ';' matapos ng nilalaman.");
+
+    int exitJump = emitJump(OP_JUMP_IF_FALSE);
+    emitByte(OP_POP);
     emitLoop(loopStart);
 
     patchJump(exitJump);
@@ -686,6 +715,8 @@ static void statement() {
         forStatement();
     } else if(match(TOKEN_KUNG)) {
         ifStatement();
+    } else if(match(TOKEN_GAWIN)) {
+        doWhileStatement();
     } else if (match(TOKEN_HABANG)) {
         whileStatement();
     } else if (match(TOKEN_URONG)) {
