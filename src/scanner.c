@@ -190,7 +190,12 @@ static TokenType identifierType() {
         case 'k':
             if (scanner.current - scanner.start > 3) {
                 switch (scanner.start[1]) {
-                    case 'a': return checkKeyword(2, 2, "da", TOKEN_KADA);
+                    case 'a': {
+                        switch (scanner.start[2]) {
+                            case 'd': return checkKeyword(3, 1, "a", TOKEN_KADA);
+                            case 'p': return checkKeyword(3, 2, "ag", TOKEN_KAPAG);
+                        }
+                    }
                     case 'i': return checkKeyword(2, 7, "lalanin", TOKEN_KILALANIN);
                     case 'u': 
                         switch (scanner.start[3]) {
@@ -210,6 +215,8 @@ static TokenType identifierType() {
             }
         case 'n': return checkKeyword(1, 3, "ull", TOKEN_NULL);
         case 'o': return TOKEN_O;
+        case 'p': return checkKeyword(1, 4, "alya", TOKEN_PALYA);
+        case 's': return checkKeyword(1, 5, "uriin", TOKEN_SURIIN);
         case 't': return checkKeyword(1, 3, "ama", TOKEN_TAMA);
         case 'u': return checkKeyword(1, 2, "ri", TOKEN_URI);
     }
@@ -268,6 +275,7 @@ Token scanToken() {
     switch (c) {
         case '(': return makeToken(TOKEN_KALIWANG_PAREN);
         case ')': return makeToken(TOKEN_KANANG_PAREN);
+        case ':': return makeToken(TOKEN_TUTULDOK);
         case ';': return makeToken(TOKEN_TULDOK_KUWIT);
         case ',': return makeToken(TOKEN_KUWIT);
         case '.': return makeToken(TOKEN_TULDOK);

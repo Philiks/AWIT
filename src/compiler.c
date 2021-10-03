@@ -10,6 +10,8 @@
 #include "debug.h"
 #endif
 
+#define MAX_CASES 256
+
 typedef struct {
     Token current;
     Token previous;
@@ -346,6 +348,7 @@ static void increment(bool canAssign) {
 static void postfixIncDec(int varIndex, uint8_t getOp, uint8_t setOp) {
     ParseFn incRule = getRule(parser.current.type)->infix;
 
+    // TODO Use OP_DUP here.
     // Current look of stack after function call.
     //                             // <varUnchanged>
     emitVariable(getOp, varIndex); // <varUnchanged> <varUnchanged>
@@ -432,6 +435,7 @@ ParseRule rules[] = {
     [TOKEN_KUWIT]            = {NULL,      NULL,      PREC_NONE},
     [TOKEN_TULDOK]           = {NULL,      NULL,      PREC_NONE},
     [TOKEN_TULDOK_KUWIT]     = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_TUTULDOK]         = {NULL,      NULL,      PREC_NONE},
     [TOKEN_PAHILIS]          = {NULL,      binary,    PREC_FACTOR},
     [TOKEN_BITUIN]           = {NULL,      binary,    PREC_FACTOR},
     [TOKEN_MODULO]           = {NULL,      binary,    PREC_FACTOR},
@@ -460,6 +464,7 @@ ParseRule rules[] = {
     [TOKEN_ITO]              = {NULL,      NULL,      PREC_NONE},
     [TOKEN_ITULOY]           = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KADA]             = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_KAPAG]            = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KILALANIN]        = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KUNDIMAN]         = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KUNG]             = {NULL,      NULL,      PREC_NONE},
@@ -467,6 +472,8 @@ ParseRule rules[] = {
     [TOKEN_MULA]             = {NULL,      NULL,      PREC_NONE},
     [TOKEN_NULL]             = {literal,   NULL,      PREC_NONE},
     [TOKEN_O]                = {NULL,      or_,       PREC_OR},
+    [TOKEN_PALYA]            = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_SURIIN]           = {NULL,      NULL,      PREC_NONE},
     [TOKEN_TAMA]             = {literal,   NULL,      PREC_NONE},
     [TOKEN_URI]              = {NULL,      NULL,      PREC_NONE},
     [TOKEN_URONG]            = {NULL,      NULL,      PREC_NONE},
@@ -627,6 +634,80 @@ static void ifStatement() {
     patchJump(elseJump);
 }
 
+static void switchStatement() {
+    consume(TOKEN_KALIWANG_PAREN, 
+        "Inasahan na makakita ng '(' matapos ang 'suriin'.");
+    expression();
+    consume(TOKEN_KANANG_PAREN, 
+        "Inasahan na makakita ng ')' matapos ang ekspresyon.");
+
+    consume(TOKEN_URONG, 
+        "Inaasahan na makakita ng pag-urong sa porma bago ang 'kapag'.");
+
+    int state = 0; // 0: before all cases (kapag), 1: before default (palya), 2: after default (palya).
+    int caseEnds[MAX_CASES];
+    int caseCount = 0;
+    int previousCaseSkip = -1;
+    
+    while (!match(TOKEN_DULONG_URONG) && !check(TOKEN_DULO)) {
+        if (match(TOKEN_KAPAG) || match(TOKEN_PALYA)) {
+            TokenType caseType = parser.previous.type;
+
+            if (state == 2) {
+                error("Hindi na maaaring magdagdag pa ng 'kapag' o isa pang 'palya' matapos ang 'palya'.");
+            }
+
+            if (state == 1) {
+                // At the end of the previous case, jump over the others.
+                caseEnds[caseCount++] = emitJump(OP_JUMP);
+
+                // Patch its condition to jump to the next case (this one).
+                patchJump(previousCaseSkip);
+                emitByte(OP_POP);
+            }
+
+            if (caseType == TOKEN_KAPAG) {
+                state = 1;
+
+                // See if the case is equal to the value.
+                emitByte(OP_DUP);
+                expression();
+
+                consume(TOKEN_TUTULDOK, "Inaasahan na makakita ng ':' matapos ang halaga sa 'kapag'.");
+
+                emitByte(OP_EQUAL);
+                previousCaseSkip = emitJump(OP_JUMP_IF_FALSE);
+
+                // Pop the comparison result.
+                emitByte(OP_POP);
+            } else {
+                state = 2;
+                consume(TOKEN_TUTULDOK, "Inaasahan na makakita ng ':' matapos ang halaga sa 'palya'.");
+                previousCaseSkip = -1;
+            }
+        } else {
+            // Otherwise, it's a statement inside the current case.
+            if (state == 0) {
+                error("Hindi maaari ang mga pahayag bago ang 'kapag'.");
+            }
+            statement();
+        }
+    }
+
+    // If we ended without a default case, patch its condition jump.
+    if (state == 1) {
+        patchJump(previousCaseSkip);
+        emitByte(OP_POP);
+    }
+
+    // Patch all the case jumps to the end.
+    for (int i = 0; i < caseCount; i++) {
+        patchJump(caseEnds[i]);
+    }
+
+    emitByte(OP_POP); // The switch value.
+}
+
 static void printStatement() {
     expression();
     consume(TOKEN_TULDOK_KUWIT, 
@@ -715,6 +796,8 @@ static void statement() {
         forStatement();
     } else if(match(TOKEN_KUNG)) {
         ifStatement();
+    } else if(match(TOKEN_SURIIN)) {
+        switchStatement();
     } else if(match(TOKEN_GAWIN)) {
         doWhileStatement();
     } else if (match(TOKEN_HABANG)) {
