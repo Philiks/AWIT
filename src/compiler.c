@@ -11,6 +11,7 @@
 #endif
 
 #define MAX_CASES 256
+#define MAX_BREAKS 256
 
 typedef struct {
     Token current;
@@ -56,6 +57,11 @@ typedef struct {
 Parser parser;
 Compiler* current = NULL;
 Chunk* compilingChunk;
+
+int innermostLoopStart = -1;
+int innermostLoopExits[MAX_BREAKS]; // Can also be used on Switch.
+int innermostLoopExitCount = -1;
+int innermostLoopDepth = 0;         // Can also be used on Switch.
 
 static Chunk* currentChunk() {
     return compilingChunk;
@@ -578,7 +584,15 @@ static void forStatement() {
         expressionStatement();
     }
 
-    int loopStart = currentChunk()->count;
+    int surroundingLoopExitCount = innermostLoopExitCount == -1 ?
+                                     0 : innermostLoopExitCount;
+    innermostLoopExitCount = 0;
+
+    int surroundingLoopStart = innermostLoopStart;
+    int surroundingLoopScopeDepth = innermostLoopDepth;
+    innermostLoopStart = currentChunk()->count;
+    innermostLoopDepth = current->scopeDepth;
+
     int exitJump = -1;
     if (!match(TOKEN_TULDOK_KUWIT)) {
         expression();
@@ -598,18 +612,30 @@ static void forStatement() {
         consume(TOKEN_KANANG_PAREN, 
             "Inasahan na makakita ng ')' matapos ang mga payahag sa 'kada'.");
 
-        emitLoop(loopStart);
-        loopStart = incrementStart;
+        emitLoop(innermostLoopStart);
+        innermostLoopStart = incrementStart;
         patchJump(bodyJump);
     }
 
     statement();
-    emitLoop(loopStart);
+    emitLoop(innermostLoopStart);
+
+    for (int i = surroundingLoopExitCount; 
+         i < innermostLoopExitCount + surroundingLoopExitCount; 
+         i++) {
+        patchJump(innermostLoopExits[i]);
+    }
 
     if (exitJump != -1) {
         patchJump(exitJump);
         emitByte(OP_POP); // Condition.
     }
+
+    // ExitCount also acts as state so 0 count should be -1.
+    innermostLoopExitCount = surroundingLoopExitCount == 0 ?
+                               -1 : surroundingLoopExitCount;
+    innermostLoopStart = surroundingLoopStart;
+    innermostLoopDepth = surroundingLoopScopeDepth;
 
     endScope();
 }
@@ -643,6 +669,10 @@ static void switchStatement() {
 
     consume(TOKEN_URONG, 
         "Inaasahan na makakita ng pag-urong sa porma bago ang 'kapag'.");
+
+    int surroundingLoopExitCount = innermostLoopExitCount == -1 ?
+                                     0 : innermostLoopExitCount;
+    innermostLoopExitCount = 0;
 
     int state = 0; // 0: before all cases (kapag), 1: before default (palya), 2: after default (palya).
     int caseEnds[MAX_CASES];
@@ -705,6 +735,16 @@ static void switchStatement() {
         patchJump(caseEnds[i]);
     }
 
+    for (int i = surroundingLoopExitCount; 
+         i < innermostLoopExitCount + surroundingLoopExitCount; 
+         i++) {
+        patchJump(innermostLoopExits[i]);
+    }
+
+    // ExitCount also acts as state so 0 count should be -1.
+    innermostLoopExitCount = surroundingLoopExitCount == 0 ?
+                               -1 : surroundingLoopExitCount;
+
     emitByte(OP_POP); // The switch value.
 }
 
@@ -715,8 +755,54 @@ static void printStatement() {
     emitByte(OP_PRINT);
 }
 
+static void discardInnerLocals() {
+    // Discard any locals created inside the loop.
+    for (int i = current->localCount -1;
+         i >= 0 && current->locals[i].depth > innermostLoopDepth;
+         i--) {
+        emitByte(OP_POP);
+    }
+}
+
+static void continueStatement() {
+    if (innermostLoopStart  == -1) {
+        error("Hindi maaaring gamitin ang 'ituloy' sa labas ng loop.");
+    }
+
+    consume(TOKEN_TULDOK_KUWIT, 
+        "Inasahan na makakita ng ';' matapos ng nilalaman.");
+
+    discardInnerLocals();
+
+    // Jump to top of current innermost loop.
+    emitLoop(innermostLoopStart);
+}
+
+static void breakStatement() {
+    if (innermostLoopExitCount == -1) {
+        error("Hindi maaaring gamitin ang 'itigil' sa labas ng loop o labas ng 'suriin' na pahayag.");
+    }
+
+    consume(TOKEN_TULDOK_KUWIT, 
+        "Inasahan na makakita ng ';' matapos ng nilalaman.");
+         
+    discardInnerLocals();
+
+    // Jump unconditionally outside the loop or switch.
+    // To be patched once all statements have been compiled.
+    innermostLoopExits[innermostLoopExitCount++] = emitJump(OP_JUMP);
+}
+
 static void whileStatement() {
-    int loopStart = currentChunk()->count;
+    int surroundingLoopExitCount = innermostLoopExitCount == -1 ?
+                                     0 : innermostLoopExitCount;
+    innermostLoopExitCount = 0;
+
+    int surroundingLoopStart = innermostLoopStart;
+    int surroundingLoopScopeDepth = innermostLoopDepth;
+    innermostLoopStart = currentChunk()->count;
+    innermostLoopDepth = current->scopeDepth;
+
     consume(TOKEN_KALIWANG_PAREN, 
         "Inasahan na makakita ng '(' matapos ang 'habang'.");
     expression();
@@ -726,14 +812,34 @@ static void whileStatement() {
     int exitJump = emitJump(OP_JUMP_IF_FALSE);
     emitByte(OP_POP);
     statement();
-    emitLoop(loopStart);
+    emitLoop(innermostLoopStart);
+
+    for (int i = surroundingLoopExitCount;
+         i < innermostLoopExitCount + surroundingLoopExitCount; 
+         i++) {
+        patchJump(innermostLoopExits[i]);
+    }
 
     patchJump(exitJump);
     emitByte(OP_POP);
+
+    // ExitCount also acts as state so 0 count should be -1.
+    innermostLoopExitCount = surroundingLoopExitCount == 0 ?
+                               -1 : surroundingLoopExitCount;
+    innermostLoopStart = surroundingLoopStart;
+    innermostLoopDepth = surroundingLoopScopeDepth;
 }
 
 static void doWhileStatement() {
-    int loopStart = currentChunk()->count;
+    int surroundingLoopExitCount = innermostLoopExitCount == -1 ?
+                                     0 : innermostLoopExitCount;
+    innermostLoopExitCount = 0;
+
+    int surroundingLoopStart = innermostLoopStart;
+    int surroundingLoopScopeDepth = innermostLoopDepth;
+    innermostLoopStart = currentChunk()->count;
+    innermostLoopDepth = current->scopeDepth;
+
     statement();
 
     consume(TOKEN_HABANG, 
@@ -748,10 +854,22 @@ static void doWhileStatement() {
 
     int exitJump = emitJump(OP_JUMP_IF_FALSE);
     emitByte(OP_POP);
-    emitLoop(loopStart);
+    emitLoop(innermostLoopStart);
+
+    for (int i = surroundingLoopExitCount;
+         i < innermostLoopExitCount + surroundingLoopExitCount; 
+         i++) {
+        patchJump(innermostLoopExits[i]);
+    }
 
     patchJump(exitJump);
     emitByte(OP_POP);
+
+    // ExitCount also acts as state so 0 count should be -1.
+    innermostLoopExitCount = surroundingLoopExitCount == 0 ?
+                               -1 : surroundingLoopExitCount;
+    innermostLoopStart = surroundingLoopStart;
+    innermostLoopDepth = surroundingLoopScopeDepth;
 }
 
 static void synchronize() {
@@ -802,6 +920,10 @@ static void statement() {
         doWhileStatement();
     } else if (match(TOKEN_HABANG)) {
         whileStatement();
+    } else if (match(TOKEN_ITULOY)) {
+        continueStatement();
+    } else if (match(TOKEN_ITIGIL)) {
+        breakStatement();
     } else if (match(TOKEN_URONG)) {
         beginScope();
         block();

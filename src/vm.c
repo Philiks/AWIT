@@ -113,7 +113,7 @@ static InterpretResult run() {
 #define BINARY_OP(valueType, op) \
     do { \
         if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
-            runtimeError("Inasahan na parehas na numero ang gamit."); \
+            runtimeError("Inaasahang parehong numero ang gamit."); \
             return INTERPRET_RUNTIME_ERROR; \
         } \
         double b = AS_NUMBER(pop()); \
@@ -203,7 +203,7 @@ static InterpretResult run() {
             case OP_SUBTRACT:   BINARY_OP(NUMBER_VAL, -); break;
             case OP_MODULO: {
                 if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) {
-                    runtimeError("Inasahan na parehas na numero ang gamit.");
+                    runtimeError("Inaasahang parehong numero ang gamit.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 int b = AS_NUMBER(pop());
@@ -218,7 +218,7 @@ static InterpretResult run() {
                 break;
             case OP_NEGATE:
                 if (!IS_NUMBER(peek(0))) {
-                    runtimeError("Inasahan na numero ang gamit.");
+                    runtimeError("Inaasahang numero ang gamit.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 push(NUMBER_VAL(-AS_NUMBER(pop())));
