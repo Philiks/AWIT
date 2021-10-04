@@ -351,13 +351,12 @@ static void increment(bool canAssign) {
     emitByte(OP_ADD);
 }
 
-static void postfixIncDec(int varIndex, uint8_t getOp, uint8_t setOp) {
+static void postfixIncDec(int varIndex, uint8_t setOp) {
     ParseFn incRule = getRule(parser.current.type)->infix;
 
-    // TODO Use OP_DUP here.
     // Current look of stack after function call.
     //                             // <varUnchanged>
-    emitVariable(getOp, varIndex); // <varUnchanged> <varUnchanged>
+    emitByte(OP_DUP);              // <varUnchanged> <varUnchanged>
     emitConstant(NUMBER_VAL(1));   // <varUnchanged> <varUnchanged> 1
     incRule(false);                // <varUnchanged> <varUnchanged> 1 <++/-->
     emitVariable(setOp, varIndex); // <varUnchanged> <varChanged>
@@ -403,7 +402,7 @@ static void namedVariable(Token name, bool canAssign) {
             emitVariable(setOp, arg);
         } else if (check(TOKEN_BAWAS_ISA) || check(TOKEN_DAGDAG_ISA)) {
             emitVariable(getOp, arg);
-            postfixIncDec(arg, getOp, setOp);
+            postfixIncDec(arg, setOp);
         } else {
             emitVariable(getOp, arg);
         }
