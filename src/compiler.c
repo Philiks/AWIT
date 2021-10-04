@@ -683,7 +683,7 @@ static void switchStatement() {
             TokenType caseType = parser.previous.type;
 
             if (state == 2) {
-                error("Hindi na maaaring magdagdag pa ng 'kapag' o isa pang 'palya' matapos ang 'palya'.");
+                error("Hindi na maaaring magdagdag pa ng 'kapag' o isa pang 'palya' matapos ang naunang 'palya'.");
             }
 
             if (state == 1) {
@@ -710,6 +710,11 @@ static void switchStatement() {
                 // Pop the comparison result.
                 emitByte(OP_POP);
             } else {
+                // Check if there are no cases (default-only switch).
+                if (state == 0) {
+                    error("Inaasahan na makakita ng kahit isang 'kapag' bago ang 'palya'.");
+                }
+
                 state = 2;
                 consume(TOKEN_TUTULDOK, "Inaasahan na makakita ng ':' matapos ang halaga sa 'palya'.");
                 previousCaseSkip = -1;
@@ -727,6 +732,12 @@ static void switchStatement() {
     if (state == 1) {
         patchJump(previousCaseSkip);
         emitByte(OP_POP);
+    }
+
+    // If we ended without any case, report an error. 
+    // default-only situation was handled inside the loop.
+    if (state == 2 && caseCount == 0) {
+        error("Inaasahan na makakita ng kahit isang 'kapag' sa loob ng 'suriin' na pahayag.");
     }
 
     // Patch all the case jumps to the end.
