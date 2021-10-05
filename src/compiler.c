@@ -437,6 +437,8 @@ static void unary(bool canAssign) {
 ParseRule rules[] = {
     [TOKEN_KALIWANG_PAREN]   = {grouping,  NULL,      PREC_NONE},
     [TOKEN_KANANG_PAREN]     = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_KALIWANG_BRACE]   = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_KANANG_BRACE]     = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KUWIT]            = {NULL,      NULL,      PREC_NONE},
     [TOKEN_TULDOK]           = {NULL,      NULL,      PREC_NONE},
     [TOKEN_TULDOK_KUWIT]     = {NULL,      NULL,      PREC_NONE},
@@ -481,9 +483,6 @@ ParseRule rules[] = {
     [TOKEN_SURIIN]           = {NULL,      NULL,      PREC_NONE},
     [TOKEN_TAMA]             = {literal,   NULL,      PREC_NONE},
     [TOKEN_URI]              = {NULL,      NULL,      PREC_NONE},
-    [TOKEN_URONG]            = {NULL,      NULL,      PREC_NONE},
-    [TOKEN_DULONG_URONG]     = {NULL,      NULL,      PREC_NONE},
-    [TOKEN_PATLANG]          = {NULL,      NULL,      PREC_NONE},
     [TOKEN_PROBLEMA]         = {NULL,      NULL,      PREC_NONE},
     [TOKEN_DULO]             = {NULL,      NULL,      PREC_NONE},
 };
@@ -542,11 +541,11 @@ static void expression() {
 }
 
 static void block() {
-    while (!check(TOKEN_DULONG_URONG) && !check(TOKEN_DULO)) {
+    while (!check(TOKEN_KANANG_BRACE) && !check(TOKEN_DULO)) {
         declaration();
     }
 
-    consume(TOKEN_DULONG_URONG, "Mali ang porma ng urong ng mga pahayag.");
+    consume(TOKEN_KANANG_BRACE, "Inaasahan na makakita ng '{' matapos ng mga pahayag.");
 }
 
 static void varDeclaration() {
@@ -663,11 +662,12 @@ static void switchStatement() {
     consume(TOKEN_KALIWANG_PAREN, 
         "Inasahan na makakita ng '(' matapos ang 'suriin'.");
     expression();
+    current->localCount++; // Offset +1 to the stack pointer.
     consume(TOKEN_KANANG_PAREN, 
         "Inasahan na makakita ng ')' matapos ang ekspresyon.");
 
-    consume(TOKEN_URONG, 
-        "Inaasahan na makakita ng pag-urong sa porma bago ang 'kapag'.");
+    consume(TOKEN_KALIWANG_BRACE, 
+        "Inaasahan na makakita ng '{' bago ang 'kapag'.");
 
     int surroundingLoopExitCount = innermostLoopExitCount == -1 ?
                                      0 : innermostLoopExitCount;
@@ -678,7 +678,7 @@ static void switchStatement() {
     int caseCount = 0;
     int previousCaseSkip = -1;
     
-    while (!match(TOKEN_DULONG_URONG) && !check(TOKEN_DULO)) {
+    while (!match(TOKEN_KANANG_BRACE) && !check(TOKEN_DULO)) {
         if (match(TOKEN_KAPAG) || match(TOKEN_PALYA)) {
             TokenType caseType = parser.previous.type;
 
@@ -687,7 +687,10 @@ static void switchStatement() {
             }
 
             if (state == 1) {
-                // At the end of the previous case, jump over the others.
+                // At the end of the previous case:
+                // - end its scope.
+                endScope();
+                // - jump over the others.
                 caseEnds[caseCount++] = emitJump(OP_JUMP);
 
                 // Patch its condition to jump to the next case (this one).
@@ -696,6 +699,7 @@ static void switchStatement() {
             }
 
             if (caseType == TOKEN_KAPAG) {
+                beginScope();
                 state = 1;
 
                 // See if the case is equal to the value.
@@ -728,8 +732,17 @@ static void switchStatement() {
         }
     }
 
+    for (int i = surroundingLoopExitCount; 
+         i < innermostLoopExitCount + surroundingLoopExitCount; 
+         i++) {
+        patchJump(innermostLoopExits[i]);
+    }
+
     // If we ended without a default case, patch its condition jump.
     if (state == 1) {
+        endScope();
+        caseEnds[caseCount++] = emitJump(OP_JUMP);
+
         patchJump(previousCaseSkip);
         emitByte(OP_POP);
     }
@@ -743,12 +756,6 @@ static void switchStatement() {
     // Patch all the case jumps to the end.
     for (int i = 0; i < caseCount; i++) {
         patchJump(caseEnds[i]);
-    }
-
-    for (int i = surroundingLoopExitCount; 
-         i < innermostLoopExitCount + surroundingLoopExitCount; 
-         i++) {
-        patchJump(innermostLoopExits[i]);
     }
 
     // ExitCount also acts as state so 0 count should be -1.
@@ -934,7 +941,7 @@ static void statement() {
         continueStatement();
     } else if (match(TOKEN_ITIGIL)) {
         breakStatement();
-    } else if (match(TOKEN_URONG)) {
+    } else if (match(TOKEN_KALIWANG_BRACE)) {
         beginScope();
         block();
         endScope();
