@@ -10,8 +10,6 @@ typedef struct {
     const char* start;
     const char* current;
     int line;
-    int indentOffset;
-    int spaceCount;
 } Scanner;
 
 Scanner scanner;
@@ -20,8 +18,6 @@ void initScanner(const char* source) {
     scanner.start = source;
     scanner.current = source;
     scanner.line = 1;
-    scanner.indentOffset = 0;
-    scanner.spaceCount = 0;
 }
 
 static bool isAlpha(char c) {
@@ -77,33 +73,7 @@ static Token errorToken(const char* message) {
     return token;
 }
 
-static bool toIndent() {
-    return scanner.spaceCount > TAB_SPACE * scanner.indentOffset;
-}
-
-static bool toDedent() {
-    return scanner.spaceCount < TAB_SPACE * scanner.indentOffset &&
-        peek() != ' ';
-}
-
-static Token makeIndent() {
-    scanner.indentOffset++;
-    scanner.start = scanner.current - scanner.spaceCount;
-    Token token = makeToken(TOKEN_URONG);
-    scanner.start = scanner.current;
-    return token;
-}
-
-static Token makeDedent() {
-    scanner.indentOffset--;
-    scanner.start = scanner.current - scanner.spaceCount;
-    Token token = makeToken(TOKEN_DULONG_URONG);
-    scanner.start = scanner.current;
-    return token;
-}
-
-static Token handleWhiteSpace() {
-    scanner.spaceCount = -1;
+static void skipWhiteSpace() {
     for (;;) {
         char c = peek();
         
@@ -112,39 +82,22 @@ static Token handleWhiteSpace() {
             case '\r':
             case '\t': {
                 advance();
-                if (scanner.spaceCount == -1) scanner.spaceCount = 0;
-                scanner.spaceCount += c == '\t' ? TAB_SPACE : 1;
-
-                if (scanner.spaceCount % TAB_SPACE != 0) {
-                    break;
-                }
-
-                if (toIndent()) return makeIndent();
-                else if (toDedent()) return makeDedent();
-
                 break;
             }
             case '\n':
                 advance();
                 scanner.line++;
-                scanner.spaceCount = 0;
                 break;
             case '/':
                 if (peekNext() == '/') {
                     // A comment goes until the end of the line.
                     while (peek() != '\n' && !isAtEnd()) advance();
                 } else {
-                    if (scanner.spaceCount % TAB_SPACE != 0)
-                        errorToken("Mali ang bilang ng urong.");
-                    return makeToken(TOKEN_PATLANG);
+                    return; 
                 }
                 break;
             default:
-                if (scanner.spaceCount % TAB_SPACE != 0)
-                    errorToken("Mali ang bilang ng urong.");
-                // Make spaceCount zero if exited after newline.
-                scanner.spaceCount = scanner.spaceCount == 0 ? 0 : -1;
-                return makeToken(TOKEN_PATLANG);
+                return; 
         }
     }
 }
@@ -257,15 +210,9 @@ static Token string() {
 }
 
 Token scanToken() {
-    Token indentToken = handleWhiteSpace();
-    if (indentToken.type != TOKEN_PATLANG && indentToken.type != TOKEN_PROBLEMA) {
-        return indentToken;
-    } else if (((scanner.spaceCount % TAB_SPACE == 0) || (isAtEnd() && scanner.indentOffset > 0)) 
-                && toDedent()) {
-        return makeDedent();
-    }
-
+    skipWhiteSpace();
     scanner.start = scanner.current;
+
     if (isAtEnd()) return makeToken(TOKEN_DULO);
 
     char c = advance();
@@ -275,6 +222,8 @@ Token scanToken() {
     switch (c) {
         case '(': return makeToken(TOKEN_KALIWANG_PAREN);
         case ')': return makeToken(TOKEN_KANANG_PAREN);
+        case '{': return makeToken(TOKEN_KALIWANG_BRACE);
+        case '}': return makeToken(TOKEN_KANANG_BRACE);
         case ':': return makeToken(TOKEN_TUTULDOK);
         case ';': return makeToken(TOKEN_TULDOK_KUWIT);
         case ',': return makeToken(TOKEN_KUWIT);
