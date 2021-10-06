@@ -1,4 +1,3 @@
-.vscode/*
 *.o
-src/awit
+rc/awit
 src/awit.exe
