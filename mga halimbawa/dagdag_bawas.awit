@@ -1,0 +1,11 @@
+kilalanin a = 2;
+kilalanin b = a++;
+kilalanin c = ++a;
+
+ipakita a + " " + b + " " + c;
+
+kilalanin x = 2;
+kilalanin y = x--;
+kilalanin z = --x;
+
+ipakita x + " " + y + " " + z;

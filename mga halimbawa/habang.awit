@@ -1,0 +1,16 @@
+kada (kilalanin x = 0; x < 5; x++) {
+  ipakita x;
+}
+
+kilalanin a = 2;
+habang (a > 0) {
+  kilalanin b = 4 * a;
+  ipakita b;
+  a--;
+}
+
+kilalanin i = 10;
+gawin {
+  ipakita i;
+  i--;
+} habang (i >= 0);

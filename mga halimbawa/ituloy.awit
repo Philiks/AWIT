@@ -1,0 +1,9 @@
+kilalanin a = 0;
+
+gawin
+    kung (a == 0)
+        a++;
+        ituloy;
+    ipakita a;
+    a++;
+habang (a < 2);

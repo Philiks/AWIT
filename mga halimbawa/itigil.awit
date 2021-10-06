@@ -1,0 +1,35 @@
+kada (kilalanin a = 0; a < 3; a++) {
+  kung (a == 2) {
+    ipakita "WOW";
+    itigil;
+  }
+  ipakita a;
+}
+
+kilalanin c = 0;
+habang (c < 3) {
+  kung (c == 2) {
+    ipakita "WOW";
+    itigil;
+  }
+  ipakita c;
+  c++;
+}
+
+kilalanin b = 0;
+gawin {
+  kung (b == 1) {
+    ipakita "WOW";
+    itigil;
+  }
+  ipakita b;
+  b++;
+} habang (b < 3);
+
+suriin(1) {
+  kapag 0: ipakita "ZERO";
+  kapag 1: 
+    ipakita "HEHE";
+    itigil;
+    ipakita "BAWAL";
+}
