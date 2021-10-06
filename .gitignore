@@ -1,3 +1,3 @@
 *.o
-rc/awit
+src/awit
 src/awit.exe
