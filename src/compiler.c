@@ -618,15 +618,15 @@ static void forStatement() {
     statement();
     emitLoop(innermostLoopStart);
 
+    if (exitJump != -1) {
+        patchJump(exitJump);
+        emitByte(OP_POP); // Condition.
+    }
+
     for (int i = surroundingLoopExitCount; 
          i < innermostLoopExitCount + surroundingLoopExitCount; 
          i++) {
         patchJump(innermostLoopExits[i]);
-    }
-
-    if (exitJump != -1) {
-        patchJump(exitJump);
-        emitByte(OP_POP); // Condition.
     }
 
     // ExitCount also acts as state so 0 count should be -1.
@@ -831,14 +831,14 @@ static void whileStatement() {
     statement();
     emitLoop(innermostLoopStart);
 
+    patchJump(exitJump);
+    emitByte(OP_POP);
+
     for (int i = surroundingLoopExitCount;
          i < innermostLoopExitCount + surroundingLoopExitCount; 
          i++) {
         patchJump(innermostLoopExits[i]);
     }
-
-    patchJump(exitJump);
-    emitByte(OP_POP);
 
     // ExitCount also acts as state so 0 count should be -1.
     innermostLoopExitCount = surroundingLoopExitCount == 0 ?
@@ -873,14 +873,14 @@ static void doWhileStatement() {
     emitByte(OP_POP);
     emitLoop(innermostLoopStart);
 
+    patchJump(exitJump);
+    emitByte(OP_POP);
+
     for (int i = surroundingLoopExitCount;
          i < innermostLoopExitCount + surroundingLoopExitCount; 
          i++) {
         patchJump(innermostLoopExits[i]);
     }
-
-    patchJump(exitJump);
-    emitByte(OP_POP);
 
     // ExitCount also acts as state so 0 count should be -1.
     innermostLoopExitCount = surroundingLoopExitCount == 0 ?
