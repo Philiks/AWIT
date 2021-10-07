@@ -1,0 +1,9 @@
+kilalanin x = 0;
+kilalanin y = 1;
+
+kada (kilalanin i = 0; i < 100; i++) {
+  kilalanin z = x + y;
+  ipakita x;
+  x = y;
+  y = z;
+}
