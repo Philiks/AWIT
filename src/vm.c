@@ -1,6 +1,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 #include "common.h"
 #include "vm.h"
@@ -11,8 +14,38 @@
 
 VM vm;
 
+static Value scanNative(int argCount, Value* args) {
+    char input[1024];
+    if (!fgets(input, sizeof(input), stdin)) {
+        printf("Hindi mabasa ang ibinigay na halaga.\n");
+        return NULL_VAL;
+    }
+
+    // fgets read the '\n' at the end that serves as the +1 for '\0'.
+    int length = strlen(input);
+
+    int i = 0;
+    while (input[i] != '\0' && isdigit(input[i]))
+        i++;
+
+    if (i != length && input[i] == '.')
+        while (input[i] != '\0' && isdigit(input[i]))
+            i++;
+
+    input[length - 1] = '\0'; // Replace '\n' with '\0'.
+    if (i == length - 1)
+        return NUMBER_VAL(strtod(input, NULL));
+    else 
+        return OBJ_VAL(copyString(input, length));
+}
+
+static Value clockNative(int argCount, Value* args) {
+    return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
+}
+
 static void resetStack() {
     vm.stackTop = vm.stack;
+    vm.frameCount = 0;
 }
 
 static void runtimeError(const char* format, ...) {
@@ -22,10 +55,28 @@ static void runtimeError(const char* format, ...) {
     va_end(args);
     fputs("\n", stderr);
 
-    size_t instruction = vm.ip - vm.chunk->code - 1;
-    int line = getLine(vm.chunk, instruction);
-    fprintf(stderr, "[linya %d] sa skrip\n", line);
+    for (int i = vm.frameCount - 1; i >= 0; i--) {
+        CallFrame* frame = &vm.frames[i];
+        ObjFunction* function = frame->function;
+        size_t instruction = frame->ip - function->chunk.code - 1;
+        fprintf(stderr, "[linya %d] sa ",
+                getLine(&function->chunk, instruction));
+        if (function->name == NULL) {
+            fprintf(stderr, "skrip\n");
+        } else {
+            fprintf(stderr, "%s()\n", function->name->chars);
+        }
+    }
+
     resetStack();
+}
+
+static void defineNative(const char* name, NativeFn function) {
+    push(OBJ_VAL(copyString(name, (int)strlen(name))));
+    push(OBJ_VAL(newNative(function)));
+    tableSet(&vm.globals, AS_STRING(vm.stack[0]), vm.stack[1]);
+    pop();
+    pop();
 }
 
 void initVM() {
@@ -34,6 +85,9 @@ void initVM() {
 
     initTable(&vm.globals);
     initTable(&vm.strings);
+
+    defineNative("clock", clockNative);
+    defineNative("basahin", scanNative);
 }
 
 void freeVM() {
@@ -54,6 +108,45 @@ Value pop() {
 
 static Value peek(int distance) {
     return vm.stackTop[-1 - distance];
+}
+
+static bool call(ObjFunction* function, int argCount) {
+    if (argCount != function->arity) {
+        runtimeError("Inaasahan na makakita ng %d argumento ngunit nakakita ng %d.",
+            function->arity, argCount);
+        return false;
+    }
+
+    if (vm.frameCount == FRAMES_MAX) {
+        runtimeError("Umaapaw ang salansan.");
+        return false;
+    }
+
+    CallFrame* frame = &vm.frames[vm.frameCount++];
+    frame->function = function;
+    frame->ip = function->chunk.code;
+    frame->slots = vm.stackTop - argCount - 1;
+    return true;
+}
+
+static bool callValue(Value callee, int argCount) {
+    if (IS_OBJ(callee)) {
+        switch (OBJ_TYPE(callee)) {
+            case OBJ_FUNCTION:
+                return call(AS_FUNCTION(callee), argCount);
+            case OBJ_NATIVE: {
+                NativeFn native = AS_NATIVE(callee);
+                Value result = native(argCount, vm.stackTop - argCount);
+                vm.stackTop -= argCount + 1;
+                push(result);
+                return true;
+            }
+            default:
+                break; // Non-callable object type.
+        }
+    }
+    runtimeError("Mga gawain at mga uri lamang ang maaaring tawagin.");
+    return false;
 }
 
 static bool isFalsey(Value value) {
@@ -105,10 +198,17 @@ static bool concatenate() {
 }
 
 static InterpretResult run() {
-#define READ_BYTE() (*vm.ip++)
-#define READ_CONSTANT() (vm.chunk->constants.values[READ_BYTE()])
+    CallFrame* frame = &vm.frames[vm.frameCount - 1];
+
+#define READ_BYTE() (*frame->ip++)
+
+#define READ_CONSTANT() \
+    (frame->function->chunk.constants.values[READ_BYTE()])
+
 #define READ_SHORT() \
-    (vm.ip += 2, (uint16_t)((vm.ip[-2] << 8) | vm.ip[-1]))
+    (frame->ip += 2, \
+    (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
+
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 #define BINARY_OP(valueType, op) \
     do { \
@@ -131,8 +231,8 @@ static InterpretResult run() {
     }
 
     printf("\n");
-    disassembleInstruction(vm.chunk,
-                            (int)(vm.ip - vm.chunk->code));
+    disassembleInstruction(&frame->function->chunk,
+        (int)(frame->ip - frame->function->chunk.code));
 #endif
 
         uint8_t instruction;
@@ -150,12 +250,12 @@ static InterpretResult run() {
             case OP_DUP: push(peek(0)); break;
             case OP_GET_LOCAL: {
                 uint8_t slot = READ_BYTE();
-                push(vm.stack[slot]);
+                push(frame->slots[slot]);
                 break;
             }
             case OP_SET_LOCAL: {
                 uint8_t slot = READ_BYTE();
-                vm.stack[slot] = peek(0);
+                frame->slots[slot] = peek(0);
                 break;
             }
             case OP_GET_GLOBAL: {
@@ -230,22 +330,39 @@ static InterpretResult run() {
             }
             case OP_JUMP: {
                 uint16_t offset = READ_SHORT();
-                vm.ip += offset;
+                frame->ip += offset;
                 break;
             }
             case OP_JUMP_IF_FALSE: {
                 uint16_t offset = READ_SHORT();
-                if (isFalsey(peek(0))) vm.ip += offset;
+                if (isFalsey(peek(0))) frame->ip += offset;
                 break;
             }
             case OP_LOOP: {
                 uint16_t offset = READ_SHORT();
-                vm.ip -= offset;
+                frame->ip -= offset;
+                break;
+            }
+            case OP_CALL: {
+                int argCount = READ_BYTE();
+                if (!callValue(peek(argCount), argCount)) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                frame = &vm.frames[vm.frameCount - 1];
                 break;
             }
             case OP_RETURN: {
-                // Exit interpreter.
-                return INTERPRET_OK;
+                Value result = pop();
+                vm.frameCount--;
+                if (vm.frameCount == 0) {
+                    pop();
+                    return INTERPRET_OK;
+                }
+
+                vm.stackTop = frame->slots;
+                push(result);
+                frame = &vm.frames[vm.frameCount - 1];
+                break;
             }
         }
     }
@@ -258,19 +375,11 @@ static InterpretResult run() {
 }
 
 InterpretResult interpret(const char* source) {
-    Chunk chunk;
-    initChunk(&chunk);
+    ObjFunction* function = compile(source);
+    if (function == NULL) return INTERPRET_COMPILE_ERROR;
 
-    if (!compile(source, &chunk)) {
-        freeChunk(&chunk);
-        return INTERPRET_COMPILE_ERROR;
-    }
+    push(OBJ_VAL(function));
+    call(function, 0);
 
-    vm.chunk = &chunk;
-    vm.ip = vm.chunk->code;
-
-    InterpretResult result = run();
-
-    freeChunk(&chunk);
-    return result;
+    return run();
 }
