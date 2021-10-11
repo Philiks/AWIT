@@ -48,7 +48,16 @@ typedef struct {
     int depth;
 } Local;
 
-typedef struct {
+typedef enum {
+    TYPE_FUNCTION,
+    TYPE_SCRIPT
+} FunctionType;
+
+typedef struct Compiler {
+    struct Compiler* enclosing;
+    ObjFunction* function;
+    FunctionType type;
+    
     Local locals[UINT8_COUNT];
     int localCount;
     int scopeDepth;
@@ -56,7 +65,6 @@ typedef struct {
 
 Parser parser;
 Compiler* current = NULL;
-Chunk* compilingChunk;
 
 int innermostLoopStart = -1;
 int innermostLoopExits[MAX_BREAKS]; // Can also be used on Switch.
@@ -64,7 +72,7 @@ int innermostLoopExitCount = -1;
 int innermostLoopDepth = 0;         // Can also be used on Switch.
 
 static Chunk* currentChunk() {
-    return compilingChunk;
+    return &current->function->chunk;
 }
 
 static void errorAt(Token* token, const char* message) {
@@ -142,10 +150,23 @@ static void patchJump(int offset) {
     currentChunk()->code[offset + 1] = jump & 0xff;
 }
 
-static void initCompiler(Compiler* compiler) {
+static void initCompiler(Compiler* compiler, FunctionType type) {
+    compiler->enclosing = current;
+    compiler->function = NULL;
+    compiler->type = type;
     compiler->localCount = 0;
     compiler->scopeDepth = 0;
+    compiler->function = newFunction();
     current = compiler;
+    if (type != TYPE_SCRIPT) {
+        current->function->name = copyString(parser.previous.start,
+                                             parser.previous.length);
+    }
+
+    Local* local = &current->locals[current->localCount++];
+    local->depth = 0;
+    local->name.start = "";
+    local->name.length = 0;
 }
 
 static void emitByte(uint8_t byte) {
@@ -187,6 +208,7 @@ static int emitJump(uint8_t instruction) {
 }
 
 static void emitReturn() {
+    emitByte(OP_NULL);
     emitByte(OP_RETURN);
 }
 
@@ -195,13 +217,19 @@ static int makeConstant(Value value) {
     return constant;
 }
 
-static void endCompiler() {
+static ObjFunction* endCompiler() {
     emitReturn();
+    ObjFunction* function = current->function;
+
 #ifdef DEBUG_PRINT_CODE
     if (!parser.hadError) {
-        disassembleChunk(currentChunk(), "code");
+        disassembleChunk(currentChunk(), function->name != NULL
+            ? function->name->chars : "<skrip>");
     }
 #endif
+
+    current = current->enclosing;
+    return function;
 }
 
 static void beginScope() {
@@ -277,6 +305,46 @@ static void declareVariable() {
     addLocal(*name);
 }
 
+static int parseVariable(const char* errorMessage) {
+    consume(TOKEN_PAGKAKAKILANLAN, errorMessage);
+
+    declareVariable();
+    if (current->scopeDepth > 0) return 0;
+
+    return identifierConstant(&parser.previous);
+}
+
+static void markInitialized() {
+    if (current->scopeDepth == 0) return;
+    current->locals[current->localCount - 1].depth =
+        current->scopeDepth;
+}
+
+static void defineVariable(int global) {
+    if (current->scopeDepth > 0) {
+        markInitialized();
+        return;
+    }
+
+    emitBytes(OP_DEFINE_GLOBAL, global);
+}
+
+static uint8_t argumentList() {
+    uint8_t argCount = 0;
+    if (!check(TOKEN_KANANG_PAREN)) {
+        do {
+            expression();
+            if (argCount == 255) {
+                error("Hindi maaaring magkaroon ng higit sa 255 na mga argumento");
+            }
+            argCount++;
+        } while (match(TOKEN_KUWIT));
+    }
+    consume(TOKEN_KANANG_PAREN, 
+        "Inaasahan na makakita ng ')' matapos ang mga argumento.");
+    return argCount;
+}
+
 static void binary(bool canAssign) {
     TokenType operatorType = parser.previous.type;
     ParseRule* rule = getRule(operatorType);
@@ -296,6 +364,11 @@ static void binary(bool canAssign) {
         case TOKEN_PAHILIS:         emitByte(OP_DIVIDE); break;
         default: return; // Unreachable.
     }
+}
+
+static void call(bool canAssign) {
+    uint8_t argCount = argumentList();
+    emitBytes(OP_CALL, argCount);
 }
 
 static void literal(bool canAssign) {
@@ -435,7 +508,7 @@ static void unary(bool canAssign) {
 }
 
 ParseRule rules[] = {
-    [TOKEN_KALIWANG_PAREN]   = {grouping,  NULL,      PREC_NONE},
+    [TOKEN_KALIWANG_PAREN]   = {grouping,  call,      PREC_CALL},
     [TOKEN_KANANG_PAREN]     = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KALIWANG_BRACE]   = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KANANG_BRACE]     = {NULL,      NULL,      PREC_NONE},
@@ -509,29 +582,6 @@ static void parsePrecedence(Precedence precedence) {
     }
 }
 
-static int parseVariable(const char* errorMessage) {
-    consume(TOKEN_PAGKAKAKILANLAN, errorMessage);
-
-    declareVariable();
-    if (current->scopeDepth > 0) return 0;
-
-    return identifierConstant(&parser.previous);
-}
-
-static void markInitialized() {
-    current->locals[current->localCount - 1].depth =
-        current->scopeDepth;
-}
-
-static void defineVariable(int global) {
-    if (current->scopeDepth > 0) {
-        markInitialized();
-        return;
-    }
-
-    emitBytes(OP_DEFINE_GLOBAL, global);
-}
-
 static ParseRule* getRule(TokenType type) {
     return &rules[type];
 }
@@ -545,7 +595,44 @@ static void block() {
         declaration();
     }
 
-    consume(TOKEN_KANANG_BRACE, "Inaasahan na makakita ng '{' matapos ng mga pahayag.");
+    consume(TOKEN_KANANG_BRACE, 
+        "Inaasahan na makakita ng '}' matapos ang mga pahayag.");
+}
+
+static void function(FunctionType type) {
+    Compiler compiler;
+    initCompiler(&compiler, type);
+    beginScope();
+
+    consume(TOKEN_KALIWANG_PAREN, 
+        "Inaasahan na makakita ng '(' matapos ang pangalan ng gawain.");
+    if (!check(TOKEN_KANANG_PAREN)) {
+        do {
+            current->function->arity++;
+            if (current->function->arity > 255) {
+                errorAtCurrent("Hindi maaaring magkaroon ng mahigit sa 255 na parametro.");
+            }
+            uint8_t constant = parseVariable(
+                "Inaasahan na makakita ng pangalan ng parametro.");
+            defineVariable(constant);
+        } while (match(TOKEN_KUWIT));
+    }
+    consume(TOKEN_KANANG_PAREN, 
+        "Inaasahan na makakita ng ')' matapos ang mga parametro.");
+    consume(TOKEN_KALIWANG_BRACE, 
+        "Inaasahan na makakita ng '{' bago ang mga pahayag sa gawain.");
+    block();
+
+    ObjFunction* function = endCompiler();
+    emitBytes(OP_CONSTANT, makeConstant(OBJ_VAL(function)));
+}
+
+static void funDeclaration() {
+    uint8_t global = parseVariable(
+        "Inaasahan ang pangalan para sa gawain.");
+    markInitialized();
+    function(TYPE_FUNCTION);
+    defineVariable(global);
 }
 
 static void varDeclaration() {
@@ -768,8 +855,23 @@ static void switchStatement() {
 static void printStatement() {
     expression();
     consume(TOKEN_TULDOK_KUWIT, 
-        "Inasahan na makakita ng ';' matapos ng nilalaman.");
+        "Inasahan na makakita ng ';' matapos ang nilalaman.");
     emitByte(OP_PRINT);
+}
+
+static void returnStatement() {
+    if (current->type == TYPE_SCRIPT) {
+        error("Hindi maaaring bumalik mula sa pinaka tuktok na code.");
+    }
+
+    if (match(TOKEN_TUTULDOK)) {
+        emitReturn();
+    } else {
+        expression();
+        consume(TOKEN_TULDOK_KUWIT,
+            "Inasahan na makakita ng ';' matapos ang ibabalik na halaga.");
+        emitByte(OP_RETURN);
+    }
 }
 
 static void discardInnerLocals() {
@@ -787,7 +889,7 @@ static void continueStatement() {
     }
 
     consume(TOKEN_TULDOK_KUWIT, 
-        "Inasahan na makakita ng ';' matapos ng nilalaman.");
+        "Inasahan na makakita ng ';' matapos ang nilalaman.");
 
     discardInnerLocals();
 
@@ -801,7 +903,7 @@ static void breakStatement() {
     }
 
     consume(TOKEN_TULDOK_KUWIT, 
-        "Inasahan na makakita ng ';' matapos ng nilalaman.");
+        "Inasahan na makakita ng ';' matapos ang nilalaman.");
          
     discardInnerLocals();
 
@@ -867,7 +969,7 @@ static void doWhileStatement() {
     consume(TOKEN_KANANG_PAREN, 
         "Inasahan na makakita ng ')' matapos ang kondisyon.");
     consume(TOKEN_TULDOK_KUWIT, 
-        "Inasahan na makakita ng ';' matapos ng nilalaman.");
+        "Inasahan na makakita ng ';' matapos ang nilalaman.");
 
     int exitJump = emitJump(OP_JUMP_IF_FALSE);
     emitByte(OP_POP);
@@ -915,7 +1017,9 @@ static void synchronize() {
 }
 
 static void declaration() {
-    if (match(TOKEN_KILALANIN)) {
+    if (match(TOKEN_GAWAIN)) {
+        funDeclaration();
+    } else if (match(TOKEN_KILALANIN)) {
         varDeclaration();
     } else {
         statement();
@@ -937,6 +1041,8 @@ static void statement() {
         doWhileStatement();
     } else if (match(TOKEN_HABANG)) {
         whileStatement();
+    } else if (match(TOKEN_IBALIK)) {
+        returnStatement();
     } else if (match(TOKEN_ITULOY)) {
         continueStatement();
     } else if (match(TOKEN_ITIGIL)) {
@@ -950,11 +1056,10 @@ static void statement() {
     }
 }
 
-bool compile(const char* source, Chunk* chunk) {
+ObjFunction* compile(const char* source) {
     initScanner(source);
     Compiler compiler;
-    initCompiler(&compiler);
-    compilingChunk = chunk;
+    initCompiler(&compiler, TYPE_SCRIPT);
 
     parser.hadError = false;
     parser.panicMode = false;
@@ -965,6 +1070,6 @@ bool compile(const char* source, Chunk* chunk) {
         declaration();
     }
 
-    endCompiler();
-    return !parser.hadError;
+    ObjFunction* function = endCompiler();
+    return parser.hadError ? NULL : function;
 }
