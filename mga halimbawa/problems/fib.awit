@@ -1,0 +1,9 @@
+gawain fib(n) {
+  kung (n < 2) ibalik n;
+
+  ibalik fib(n - 2) + fib(n - 1);
+}
+
+kilalanin simula = clock();
+ipakita fib(35);
+ipakita clock() - simula;
