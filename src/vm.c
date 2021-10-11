@@ -14,35 +14,6 @@
 
 VM vm;
 
-static Value scanNative(int argCount, Value* args) {
-    char input[1024];
-    if (!fgets(input, sizeof(input), stdin)) {
-        printf("Hindi mabasa ang ibinigay na halaga.\n");
-        return NULL_VAL;
-    }
-
-    // fgets read the '\n' at the end that serves as the +1 for '\0'.
-    int length = strlen(input);
-
-    int i = 0;
-    while (input[i] != '\0' && isdigit(input[i]))
-        i++;
-
-    if (i != length && input[i] == '.')
-        while (input[i] != '\0' && isdigit(input[i]))
-            i++;
-
-    input[length - 1] = '\0'; // Replace '\n' with '\0'.
-    if (i == length - 1)
-        return NUMBER_VAL(strtod(input, NULL));
-    else 
-        return OBJ_VAL(copyString(input, length));
-}
-
-static Value clockNative(int argCount, Value* args) {
-    return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
-}
-
 static void resetStack() {
     vm.stackTop = vm.stack;
     vm.frameCount = 0;
@@ -69,6 +40,60 @@ static void runtimeError(const char* format, ...) {
     }
 
     resetStack();
+}
+
+static bool isSameArity(int argCount, int funcArity) {
+    if (argCount != funcArity) {
+        runtimeError("Inaasahan na makakita ng %d argumento ngunit nakakita ng %d.",
+            funcArity, argCount);
+        return false;
+    }
+
+    return true;
+}
+
+static bool willNotOverflow() {
+    if (vm.frameCount == FRAMES_MAX) {
+        runtimeError("Umaapaw ang salansan.");
+        return false;
+    }
+
+    return true;
+}
+
+static Value scanNative(int argCount, Value* args) {
+    if (!(isSameArity(argCount, 0) && willNotOverflow()))
+        return NULL_VAL;
+
+    char input[1024];
+    if (!fgets(input, sizeof(input), stdin)) {
+        printf("Hindi mabasa ang ibinigay na halaga.\n");
+        return NULL_VAL;
+    }
+
+    // fgets read the '\n' at the end that serves as the +1 for '\0'.
+    int length = strlen(input);
+
+    int i = 0;
+    while (input[i] != '\0' && isdigit(input[i]))
+        i++;
+
+    if (i != length && input[i] == '.')
+        while (input[i] != '\0' && isdigit(input[i]))
+            i++;
+
+    input[length - 1] = '\0'; // Replace '\n' with '\0'.
+    if (i == length - 1)
+        return NUMBER_VAL(strtod(input, NULL));
+    else 
+        return OBJ_VAL(copyString(input, length));
+}
+
+static Value clockNative(int argCount, Value* args) {
+    if (!(isSameArity(argCount, 0) && willNotOverflow()))
+        return NULL_VAL;
+
+    return NUMBER_VAL((double)clock() / CLOCKS_PER_SEC);
 }
 
 static void defineNative(const char* name, NativeFn function) {
@@ -111,16 +136,8 @@ static Value peek(int distance) {
 }
 
 static bool call(ObjFunction* function, int argCount) {
-    if (argCount != function->arity) {
-        runtimeError("Inaasahan na makakita ng %d argumento ngunit nakakita ng %d.",
-            function->arity, argCount);
+    if (!(isSameArity(argCount, function->arity) && willNotOverflow()))
         return false;
-    }
-
-    if (vm.frameCount == FRAMES_MAX) {
-        runtimeError("Umaapaw ang salansan.");
-        return false;
-    }
 
     CallFrame* frame = &vm.frames[vm.frameCount++];
     frame->function = function;
