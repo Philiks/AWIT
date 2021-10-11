@@ -1,0 +1,27 @@
+kilalanin rows = 10;
+
+kada(kilalanin i = 0; i < rows; i++) {
+  kilalanin ipapakita = "";
+  kada (kilalanin j = 0; j <= i; j++)
+    ipapakita = ipapakita + "*";
+
+  kada (kilalanin space = 0; space < (rows - i - 1) * 2; space++)
+    ipapakita = ipapakita + " ";
+  
+  kada (kilalanin j = 0; j <= i; j++)
+    ipapakita = ipapakita + "*";
+  ipakita ipapakita;
+}
+
+kada(kilalanin i = rows - 1; i >= 0; i--) {
+  kilalanin ipapakita = "";
+  kada (kilalanin j = 0; j < i; j++)
+    ipapakita = ipapakita + "*";
+
+  kada (kilalanin space = 0; space < (rows - i) * 2; space++)
+    ipapakita = ipapakita + " ";
+  
+  kada (kilalanin j = 0; j < i; j++)
+    ipapakita = ipapakita + "*";
+  ipakita ipapakita;
+}
