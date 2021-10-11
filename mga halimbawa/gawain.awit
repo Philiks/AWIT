@@ -1,0 +1,5 @@
+gawain meronNa() {
+  ipakita "Oo meron na!";
+}
+
+ipakita meronNa;

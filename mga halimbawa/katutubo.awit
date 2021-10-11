@@ -1,0 +1,6 @@
+//kilalanin simula = clock();
+//ipakita clock() - simula;
+kilalanin edad = basahin();
+ipakita "Ang iyong edad ay: " + edad;
+kilalanin bago = edad * 2;
+ipakita bago;
