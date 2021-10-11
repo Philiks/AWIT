@@ -31,7 +31,7 @@ static void runtimeError(const char* format, ...) {
         ObjFunction* function = frame->function;
         size_t instruction = frame->ip - function->chunk.code - 1;
         fprintf(stderr, "[linya %d] sa ",
-                getLine(&function->chunk, instruction));
+                getLine(&function->chunk, instruction)); // TODO: Use the old implementation.
         if (function->name == NULL) {
             fprintf(stderr, "skrip\n");
         } else {
@@ -216,20 +216,21 @@ static bool concatenate() {
 
 static InterpretResult run() {
     CallFrame* frame = &vm.frames[vm.frameCount - 1];
+    register uint8_t* ip = frame->ip;
 
-#define READ_BYTE() (*frame->ip++)
+#define READ_BYTE() (*ip++)
 
 #define READ_CONSTANT() \
     (frame->function->chunk.constants.values[READ_BYTE()])
 
 #define READ_SHORT() \
-    (frame->ip += 2, \
-    (uint16_t)((frame->ip[-2] << 8) | frame->ip[-1]))
+    (ip += 2, (uint16_t)((ip[-2] << 8) | ip[-1]))
 
 #define READ_STRING() AS_STRING(READ_CONSTANT())
 #define BINARY_OP(valueType, op) \
     do { \
         if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) { \
+            frame->ip = ip; \
             runtimeError("Inaasahang parehong numero ang gamit."); \
             return INTERPRET_RUNTIME_ERROR; \
         } \
@@ -279,6 +280,7 @@ static InterpretResult run() {
                 ObjString* name = READ_STRING();
                 Value value;
                 if (!tableGet(&vm.globals, name, &value)) {
+                    frame->ip = ip;
                     runtimeError("Hindi kilala ang lagayan '%s'.", name->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -295,6 +297,7 @@ static InterpretResult run() {
                 ObjString* name = READ_STRING();
                 if (tableSet(&vm.globals, name, peek(0))) {
                     tableDelete(&vm.globals, name);
+                    frame->ip = ip;
                     runtimeError("Hindi kilala ang lagayan '%s'.", name->chars);
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -312,6 +315,7 @@ static InterpretResult run() {
                 if (IS_NUMBER(peek(0)) && IS_NUMBER(peek(1))) {
                     BINARY_OP(NUMBER_VAL, +); break;
                 } else if(!concatenate()) {
+                    frame->ip = ip;
                     runtimeError("Hindi makabuo ng salita gamit.");
                     return INTERPRET_RUNTIME_ERROR;
 				}
@@ -320,6 +324,7 @@ static InterpretResult run() {
             case OP_SUBTRACT:   BINARY_OP(NUMBER_VAL, -); break;
             case OP_MODULO: {
                 if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) {
+                    frame->ip = ip;
                     runtimeError("Inaasahang parehong numero ang gamit.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -335,6 +340,7 @@ static InterpretResult run() {
                 break;
             case OP_NEGATE:
                 if (!IS_NUMBER(peek(0))) {
+                    frame->ip = ip;
                     runtimeError("Inaasahang numero ang gamit.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -347,25 +353,27 @@ static InterpretResult run() {
             }
             case OP_JUMP: {
                 uint16_t offset = READ_SHORT();
-                frame->ip += offset;
+                ip += offset;
                 break;
             }
             case OP_JUMP_IF_FALSE: {
                 uint16_t offset = READ_SHORT();
-                if (isFalsey(peek(0))) frame->ip += offset;
+                if (isFalsey(peek(0))) ip += offset;
                 break;
             }
             case OP_LOOP: {
                 uint16_t offset = READ_SHORT();
-                frame->ip -= offset;
+                ip -= offset;
                 break;
             }
             case OP_CALL: {
                 int argCount = READ_BYTE();
+                frame->ip = ip;
                 if (!callValue(peek(argCount), argCount)) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
                 frame = &vm.frames[vm.frameCount - 1];
+                ip = frame->ip;
                 break;
             }
             case OP_RETURN: {
@@ -379,6 +387,7 @@ static InterpretResult run() {
                 vm.stackTop = frame->slots;
                 push(result);
                 frame = &vm.frames[vm.frameCount - 1];
+                ip = frame->ip;
                 break;
             }
         }
