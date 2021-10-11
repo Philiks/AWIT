@@ -30,8 +30,8 @@ static void runtimeError(const char* format, ...) {
         CallFrame* frame = &vm.frames[i];
         ObjFunction* function = frame->function;
         size_t instruction = frame->ip - function->chunk.code - 1;
-        fprintf(stderr, "[linya %d] sa ",
-                getLine(&function->chunk, instruction)); // TODO: Use the old implementation.
+        fprintf(stderr, "[linya %d] sa ", 
+            getLine(&function->chunk, instruction));
         if (function->name == NULL) {
             fprintf(stderr, "skrip\n");
         } else {

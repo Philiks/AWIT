@@ -36,12 +36,17 @@ typedef enum {
 } OpCode;
 
 typedef struct {
+    int offset;
+    int line;
+} LineStart;
+
+typedef struct {
     int count;
     int capacity;
     uint8_t* code;
     int lineCount;
     int lineCapacity;
-    int* lines;
+    LineStart* lines;
     ValueArray constants;
 } Chunk;
 

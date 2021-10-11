@@ -31,16 +31,20 @@ void writeChunk(Chunk* chunk, uint8_t byte, int line) {
     chunk->code[chunk->count] = byte;
     chunk->count++;
 
-    if (chunk->lineCapacity < line) {
+    if (chunk->lineCount > 0 &&
+        chunk->lines[chunk->lineCount - 1].line == line) {
+        return;
+    }
+
+    if (chunk->lineCapacity < chunk->lineCount + 1) {
         chunk->lineCapacity = GROW_CAPACITY(chunk->lineCapacity);
-        chunk->lines = GROW_ARRAY(int, chunk->lines,
+        chunk->lines = GROW_ARRAY(LineStart, chunk->lines,
             chunk->lineCapacity);
     }
 
-    chunk->lines[chunk->lineCount]++;
-    if (chunk->lineCount < line) {
-        chunk->lineCount++;
-    }
+    LineStart* lineStart = &chunk->lines[chunk->lineCount++];
+    lineStart->offset = chunk->count - 1;
+    lineStart->line = line;
 }
 
 void writeConstant(Chunk* chunk, Value value, int line) {
@@ -62,8 +66,19 @@ int addConstant(Chunk* chunk, Value value) {
 }
 
 int getLine(Chunk* chunk, int instruction) {
-    for (int line = 0; line < chunk->lineCount; line++) {
-        instruction -= chunk->lines[line];
-        if (instruction <= 0) return line + 1;
+    int start = 0;
+    int end = chunk->lineCount - 1;
+
+    for (;;) {
+        int mid = (start + end) / 2;
+        LineStart* line = &chunk->lines[mid];
+        if (instruction < line->offset) {
+            end = mid - 1;
+        } else if (mid == chunk->lineCount - 1 ||
+            instruction < chunk->lines[mid + 1].offset) {
+            return line->line;
+        } else {
+            start = mid + 1;
+        }
     }
 }
