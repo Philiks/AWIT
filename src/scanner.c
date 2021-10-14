@@ -167,7 +167,7 @@ static TokenType identifierType() {
                 }
             }
         case 'n': return checkKeyword(1, 3, "ull", TOKEN_NULL);
-        case 'o': return TOKEN_O;
+        case 'o': return checkKeyword(1, 0, "o", TOKEN_O);
         case 'p': return checkKeyword(1, 4, "alya", TOKEN_PALYA);
         case 's': return checkKeyword(1, 5, "uriin", TOKEN_SURIIN);
         case 't': return checkKeyword(1, 3, "ama", TOKEN_TAMA);
