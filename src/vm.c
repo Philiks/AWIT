@@ -112,7 +112,7 @@ void initVM() {
     initTable(&vm.globals);
     initTable(&vm.strings);
 
-    defineNative("clock", clockNative);
+    defineNative("oras", clockNative);
     defineNative("basahin", scanNative);
 }
 
