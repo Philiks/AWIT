@@ -722,12 +722,19 @@ static void expressionStatement() {
 
 static void forStatement() {
     beginScope();
+
+    int loopVariable = -1;
+    Token loopVariableName;
+    loopVariableName.start = NULL;
+
     consume(TOKEN_KALIWANG_PAREN, 
         "Inasahan na makakita ng '(' matapos ang 'kada'.");
     if (match(TOKEN_TULDOK_KUWIT)) {
         // No initializer.
     } else if (match(TOKEN_KILALANIN)) {
+        loopVariable = parser.current;
         varDeclaration();
+        loopVariable = current->localCount - 1;
     } else {
         expressionStatement();
     }
@@ -765,7 +772,24 @@ static void forStatement() {
         patchJump(bodyJump);
     }
 
+    int innerVariable = -1;
+    if (loopVariable != -1) {
+        beginScope();
+        emitBytes(OP_GET_LOCAL, (uint8_t)loopVariable);
+        addLocal(loopVariableName);
+        markInitialized();
+        innerVariable = current->current->localCount - 1;
+    }
+
     statement();
+    if (loopVariable != -1) {
+        emitBytes(OP_GET_LOCAL, (uint8_t)innerVariable);
+        emitBytes(OP_SET_LOCAL, (uint8_t)loopVariable);
+        emitByte(OP_POP);
+
+        endScope();
+    }
+
     emitLoop(innermostLoopStart);
 
     if (exitJump != -1) {
