@@ -732,7 +732,7 @@ static void forStatement() {
     if (match(TOKEN_TULDOK_KUWIT)) {
         // No initializer.
     } else if (match(TOKEN_KILALANIN)) {
-        loopVariable = parser.current;
+        loopVariableName = parser.current;
         varDeclaration();
         loopVariable = current->localCount - 1;
     } else {
@@ -778,7 +778,7 @@ static void forStatement() {
         emitBytes(OP_GET_LOCAL, (uint8_t)loopVariable);
         addLocal(loopVariableName);
         markInitialized();
-        innerVariable = current->current->localCount - 1;
+        innerVariable = current->localCount - 1;
     }
 
     statement();
