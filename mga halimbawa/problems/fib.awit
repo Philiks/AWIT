@@ -4,6 +4,6 @@ gawain fib(n) {
   ibalik fib(n - 2) + fib(n - 1);
 }
 
-kilalanin simula = clock();
+kilalanin simula = oras();
 ipakita fib(35);
-ipakita clock() - simula;
+ipakita oras() - simula;
