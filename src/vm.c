@@ -108,6 +108,12 @@ static void defineNative(const char* name, NativeFn function) {
 void initVM() {
     resetStack();
     vm.objects = NULL;
+    vm.bytesAllocated = 0;
+    vm.nextGC = 1024 * 1024;
+
+    vm.grayCount = 0;
+    vm.grayCapacity = 0;
+    vm.grayStack = NULL;
 
     initTable(&vm.globals);
     initTable(&vm.strings);
@@ -235,8 +241,8 @@ static ObjString* toString(Value value, char *buffer) {
 static bool concatenate() {
     char bBuffer[VAL_BUFFER_SIZE];
     char aBuffer[VAL_BUFFER_SIZE];
-    ObjString* b = toString(pop(), bBuffer);
-    ObjString* a = toString(pop(), aBuffer);
+    ObjString* b = toString(peek(0), bBuffer);
+    ObjString* a = toString(peek(1), aBuffer);
 
     if (b == NULL || a == NULL) return false;
 
@@ -245,7 +251,9 @@ static bool concatenate() {
     memcpy(result->chars, a->chars, a->length);
     memcpy(result->chars + a->length, b->chars, b->length);
     result->chars[length] = '\0';
-    
+
+    pop();
+    pop();
     push(OBJ_VAL(result));
     return true;
 }
