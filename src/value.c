@@ -34,7 +34,7 @@ void printValue(Value value) {
             printf(AS_BOOL(value) ? "tama" : "mali");
             break;
         case VAL_NULL: printf("null"); break;
-        case VAL_NUMBER: printf("%g", AS_NUMBER(value)); break;
+        case VAL_NUMBER: printf("%.0f", AS_NUMBER(value)); break;
         case VAL_OBJ: printObject(value); break;
     }
 }
