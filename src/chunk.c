@@ -14,8 +14,8 @@ void initChunk(Chunk* chunk) {
 }
 
 void freeChunk(Chunk* chunk) {
-    FREE_ARRAY(chunk->code);
-    FREE_ARRAY(chunk->lines);
+    FREE_ARRAY(uint8_t, chunk->code, chunk->capacity);
+    FREE_ARRAY(LineStart, chunk->lines, chunk->lineCapacity);
     freeValueArray(&chunk->constants);
     chunk->count = 0;
     initChunk(chunk);
@@ -23,9 +23,10 @@ void freeChunk(Chunk* chunk) {
 
 void writeChunk(Chunk* chunk, uint8_t byte, int line) {
     if (chunk->capacity < chunk->count + 1) {
-        chunk->capacity = GROW_CAPACITY(chunk->capacity);
+        int oldCapacity = chunk->capacity;
+        chunk->capacity = GROW_CAPACITY(oldCapacity);
         chunk->code = GROW_ARRAY(uint8_t, chunk->code, 
-            chunk->capacity);
+            oldCapacity, chunk->capacity);
     }
 
     chunk->code[chunk->count] = byte;
@@ -37,9 +38,10 @@ void writeChunk(Chunk* chunk, uint8_t byte, int line) {
     }
 
     if (chunk->lineCapacity < chunk->lineCount + 1) {
-        chunk->lineCapacity = GROW_CAPACITY(chunk->lineCapacity);
+        int oldLineCapacity = chunk->lineCapacity;
+        chunk->lineCapacity = GROW_CAPACITY(oldLineCapacity);
         chunk->lines = GROW_ARRAY(LineStart, chunk->lines,
-            chunk->lineCapacity);
+            oldLineCapacity, chunk->lineCapacity);
     }
 
     LineStart* lineStart = &chunk->lines[chunk->lineCount++];
