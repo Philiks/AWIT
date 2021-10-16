@@ -12,8 +12,8 @@
 
 static Obj* allocateObject(size_t size, ObjType type) {
     Obj* object = (Obj*)reallocate(NULL, 0, size);
-    object->header = (unsigned long)vm.objects << 8 | (unsigned long) type;
-    setMark(object, !vm.markValue);
+    object->header = (unsigned long)!vm.markValue << 56 |
+        (unsigned long)vm.objects << 8 | (unsigned long) type;
     vm.objects = object;
     
 #ifdef DEBUG_LOG_GC
