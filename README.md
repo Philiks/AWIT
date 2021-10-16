@@ -1,5 +1,5 @@
 # AWIT
-“AWIT” which stands for, “Algorithm written in Tagalog”, complete with its own syntaxes, and built-in virtual machine whose main purpose is the accurate and precise analysis of algorithms that exist. However, it will not be strictly in Tagalog but in the Filipino language and the reason for the naming is to preserve the Filipino word, “AWIT” instead of “AWIF”. This will be a great educational programming language for Filipino freelancers, students or professional developers who have interest in both algorithms and programming languages.
+***“AWIT”*** which stands for, ***“Algorithm written in Tagalog”***, complete with its own syntaxes, and built-in virtual machine whose main purpose is the accurate and precise analysis of algorithms that exist. However, it will not be strictly in Tagalog but in the Filipino language and the reason for the naming is to preserve the Filipino word, *“AWIT”* instead of *“AWIF”*. This will be a great educational programming language for Filipino freelancers, students or professional developers who have interest in both algorithms and programming languages.
 
 ## Appreciation
 The language implementation was based on [LOX's clox implementation](https://github.com/munificent/craftinginterpreters/). From the scanner to the compiler to the VM heck even the Garbage Collector. Although there are a lot of significant differences, the implementations were highly inspired by [Nystrom's Crafting Interpreters](https://craftinginterpreters.com). Again, thank you!
@@ -31,22 +31,24 @@ ipakita fib(69);
 ## Panimulang Hakbang
 ### Mga Kailangan:
 - [Make](https://www.gnu.org/software/make/manual/make.html)
-- C compiler (recommends [gcc](https://gcc.gnu.org/)
+- C compiler (recommends [gcc](https://gcc.gnu.org/))
 
 ### Compilation
 - `make` (either in [AWIT](./) or in [AWIT/src](/src)
-**Note:** The `awit` or `awit.exe` is located at the [AWIT/src](/src) after compilation.
+> **Note:** The `awit` or `awit.exe` is located at the [AWIT/src](/src) after compilation.
 
 ### Paandarin
-- `./awit [*.awit file]`    (in UNIX-based systems)
-- `./awit.exe [*.awit file] (for Windows system)
-**Note:** Running without the file as argument will fire up the REPL.
+- `./awit [*.awit file]` (in UNIX-based systems)
+- `./awit.exe [*.awit file]` (for Windows system)
+> **Note:** Running without the file as argument will fire up the REPL.
 
 ## Mga Katangian
 ### Data Types
 #### Booleans
 `tama` o `mali`
-`kilalanin singleKaBa = tama;`
+```
+kilalanin singleKaBa = tama;
+```
 
 #### Numbers
 `6.9` `420`
@@ -57,7 +59,9 @@ kilalanin integer = 420;
 
 #### Strings
 `"Isa akong lupon ng mga salita."` `""`
-`kilalanin pangalan = "Felix Raffy Mark";`
+```
+kilalanin pangalan = "Felix Raffy Mark";
+```
 
 #### Null
 `null` (almost used `wala` but `null` prevails)
@@ -70,14 +74,17 @@ kilalanin wala = null;
 #### Arithmetic
 - `+` addition
 - `-` subtraction
-- `\*` multiplication
+- `*` multiplication
 - `/` division
 - `%` modulo division (remainder)
 `1 + 2 - 3 * 4 / 5 % 6; // This results to 1 btw.`
 
 #### Unary
 `-` negation
-`\-10;`
+```
+-10;
+-(10 - 11); // 1
+```
 
 #### Comparison
 - `<`  less than
@@ -93,13 +100,17 @@ kung (10 < 20) {
 #### Equality
 - `==` equal to
 - `!=` not equal to
-`"tayo" != "bagay";`
+```
+"tayo" != "bagay";
+```
 
 #### Logical Operators
 - `!`  not
 - `at` and
 - `o`  or
-`tama o mali; // tama, 'o' at 'at' are short-circuit operators`
+```
+tama o mali; // tama, 'o' at 'at' are short-circuit operators
+```
 > For more reading about [short-circuit evaluation](https://en.wikipedia.org/wiki/Short-circuit_evaluation)
 
 #### Precedence and Grouping
@@ -115,23 +126,25 @@ kung (10 < 20) {
 9.  *or*              `o`
 10. *assignment*      `=`
 
-**Note:** You can always override precedence by using groupin `()`.
+> **Note:** You can always override precedence by using groupin `()`.
 
 ### Mga Pahayag
 #### Ipakita
-**Syntax** `ipakita <ekspresyon> ;`
-`ipakita "Kamusta ka naman?";`
+Syntax `ipakita <ekspresyon> ;`
+```
+ipakita "Kamusta ka naman?";
+```
 
 #### Kilalanin (Declaration / Definition)
-*declaration*
-**Syntax** `kilalanin <identifier> ;`
+*declaration*<br />
+Syntax `kilalanin <identifier> ;`
 ```
 kilalanin walangHalaga;
 ipakita walangHalaga; // null
 ```
 
-*definition*
-**Syntax** `[kilalanin] <identifier> = <ekspresyon> ;`
+*definition*<br />
+Syntax `[kilalanin] <identifier> = <ekspresyon> ;`
 ```
 kilalanin mayHalaga = tama;
 ipakita mayHalaga; // tama
@@ -140,7 +153,7 @@ ipakita mayHalaga; // 12
 ```
 
 #### Kung [Kundiman]
-**Syntax** `kung ( <ekspresyon> ) <pahayag> [kundiman <pahayag]
+Syntax `kung ( <ekspresyon> ) <pahayag> [kundiman <pahayag]`
 ```
 kilalanin edad = 16;
 kung (edad < 18)
@@ -150,7 +163,7 @@ kundiman
 ```
 
 #### Suriin [Kapag] [palya]
-**Syntax** `suriin ( <ekspresyon> ) { [kapag <ekspresyon> : <pahayag>]+ [palya : <pahayag>] }
+Syntax `suriin ( <ekspresyon> ) { [kapag <ekspresyon> : <pahayag>]+ [palya : <pahayag>] }`
 ```
 kilalanin numero = 2;
 suriin (numero) {
@@ -161,9 +174,10 @@ suriin (numero) {
   palya:
     ipakita "Di makita ang numero.";
 }
+```
 
 #### Habang
-**Syntax** `habang ( <ekspresyon> ) <pahayag>`
+Syntax `habang ( <ekspresyon> ) <pahayag>`
 ```
 // Prints 0 - 9
 kilalanin n = 0;
@@ -172,7 +186,7 @@ habang (n < 10)
 ```
 
 #### Gawin-Habang
-**Syntax** `gawin <pahayag> habang ( <ekspresyon> ) ;`
+Syntax `gawin <pahayag> habang ( <ekspresyon> ) ;`
 ```
 // Prints 0 - 10
 kilalanin n = 0;
@@ -182,7 +196,7 @@ habang (n < 10);
 ```
 
 #### Kada
-**Syntax** `kada ( <ekspresyon> ; <ekspresyon> ; <ekspresyon> ) <pahayag> `
+Syntax `kada ( <ekspresyon> ; <ekspresyon> ; <ekspresyon> ) <pahayag> `
 ```
 // Prints 0 - 9;
 kada (kilalanin n = 0; n < 10; n++) {
@@ -191,7 +205,7 @@ kada (kilalanin n = 0; n < 10; n++) {
 ```
 
 #### Itigil
-**Syntax** `itigil ;`
+Syntax `itigil ;`
 ```
 kilalanin ctr = 0;
 habang (tama) {
@@ -202,10 +216,10 @@ habang (tama) {
   ctr++;
 }
 ```
-**Note:** Can only be used inside looping statements `habang` `gawin-habang` `kada`.
+> **Note:** Can only be used inside looping statements `habang` `gawin-habang` `kada`.
 
 #### Ituloy
-**Syntax** `ituloy ;`
+Syntax `ituloy ;`
 ```
 // DANGER!!! This will cause an infinite loop DO NOT TRY.
 // Pero ikaw bahala ;)
@@ -218,10 +232,10 @@ habang (tama) {
   ctr++;
 }
 ```
-**Note:** Can only be used inside looping statements `habang` `gawin-habang` `kada`.
+> **Note:** Can only be used inside looping statements `habang` `gawin-habang` `kada`.
 
 #### Ibalik
-**Syntax** `ibalik [<ekspresyon>] ;`
+Syntax `ibalik [<ekspresyon>] ;`
 ```
 gawain pagsamahin(a, b) {
   ibalik a;
@@ -229,10 +243,10 @@ gawain pagsamahin(a, b) {
 
 ipakita pagsamahin(34, 35); // 69
 ```
-**Note:** Can only be used inside functions `gawain`.
+> **Note:** Can only be used inside functions `gawain`.
 
 #### Mga Pahayag
-**Syntax** `{ [<pahayag>]* }`
+Syntax `{ [<pahayag>]* }`
 ```
 kilalanin a = "labas";
 {
@@ -243,7 +257,7 @@ kilalanin a = "labas";
 ```
 
 #### Ekspresyong Pahayag
-**Syntax** `<ekspresyon> ;`
+Syntax `<ekspresyon> ;`
 ```
 kilalanin ctr = 0;
 ctr++; // Useful
@@ -251,7 +265,7 @@ ctr++; // Useful
 ```
 
 #### Gawain
-**Syntax** `gawain <identifier> ( [<identifier> ,]* ) { <pahayag> }`
+Syntax `gawain <identifier> ( [<identifier> ,]* ) { <pahayag> }`
 ```
 gawain kamusta() {
   ipakita "Kamusta!";
@@ -261,7 +275,7 @@ kamusta();
 ```
 
 #### Closures
-**Syntax** `gawain <identifier> ( [<identifier> ,]* ) {
+Syntax `gawain <identifier> ( [<identifier> ,]* ) {
   <gawain> }`
 ```
 kilalanin tagapalit;
@@ -288,7 +302,7 @@ tagatingin(); // 420
 ```
 
 #### Uri
-**Syntax** `uri <identifier> { <pahayag>* }`
+Syntax `uri <identifier> { <pahayag>* }`
 ```
 uri Tao {
   kain() {
@@ -328,10 +342,10 @@ uri Tao {
   }
 }
 ```  
-**Note:** `sim` is short for `simula`.
+> **Note:** `sim` is short for `simula`.
 
 #### Inheritance
-**Syntax** `uri <identifier> < <class-name> { <pahayag> }`
+Syntax `uri <identifier> < <class-name> { <pahayag> }`
 ```
 uri Estudyante < Tao {
   kilalanin pangkatTaon;
@@ -355,9 +369,9 @@ felix.tulog();
 
 ## Authors
 This language is all thanks to these people:
-(Felix Janopol Jr.)[https://github.com/Philiks]
-(Raffy Wamar)[https://github.com/waffy-kun]
-(Mark Julius Mella)[https://github.com/Markmella]
+[Felix Janopol Jr.](https://github.com/Philiks)
+[Raffy Wamar](https://github.com/waffy-kun)
+[Mark Julius Mella](https://github.com/Markmella)
 
 ## License
 This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
