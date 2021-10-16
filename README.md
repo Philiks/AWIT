@@ -380,9 +380,9 @@ felix.tulog();
 ```
 
 ## Authors
-This language is all thanks to these people:
-[Felix Janopol Jr.](https://github.com/Philiks)
-[Raffy Wamar](https://github.com/waffy-kun)
+This language is all thanks to these people:<br />
+[Felix Janopol Jr.](https://github.com/Philiks)<br />
+[Raffy Wamar](https://github.com/waffy-kun)<br />
 [Mark Julius Mella](https://github.com/Markmella)
 
 ## License
