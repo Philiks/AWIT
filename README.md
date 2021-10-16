@@ -332,8 +332,8 @@ uri Tao {
 ```
 
 - #### Instantiation and Initialization
-*instantiation*
-**Syntax** `kilalanin <identifier> = <class-name>( [<ekspresyon> ,]* ) ;`
+*instantiation*<br />
+Syntax `kilalanin <identifier> = <class-name>( [<ekspresyon> ,]* ) ;`
 ```
 kilalanin tao = Tao();
 tao.kain();
@@ -341,8 +341,8 @@ tao.tulog();
 tao.laro();
 ```
 
-*initialization*
-**Syntax** `sim ( [<identifier> ,]* ) { <pahayag> }`
+*initialization*<br />
+Syntax `sim ( [<identifier> ,]* ) { <pahayag> }`
 ```
 uri Tao {
   kilalanin pangalan;
