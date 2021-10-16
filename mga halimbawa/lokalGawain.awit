@@ -1,0 +1,17 @@
+kilalanin setter;
+kilalanin getter;
+
+gawain main() {
+  kilalanin halaga = "orihinal";
+
+  gawain set() { halaga = "nabago"; }
+  gawain get() { ipakita halaga; }
+
+  setter = set;
+  getter = get;
+}
+
+main();
+getter(); // orihinal
+setter();
+getter(); // nabago
