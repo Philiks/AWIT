@@ -15,7 +15,9 @@ The language implementation was based on [LOX's clox implementation](https://git
 
 ## Mga Halimbawa
 Kamusta, Daigdig!:
-`ipakita "Kamusta, Daigdig!";`
+```
+ipakita "Kamusta, Daigdig!";
+```
 
 Recursive program to print the 69th number in fibonacci sequence:
 ```
@@ -44,26 +46,26 @@ ipakita fib(69);
 
 ## Mga Katangian
 ### Data Types
-#### Booleans
+- #### Booleans
 `tama` o `mali`
 ```
 kilalanin singleKaBa = tama;
 ```
 
-#### Numbers
+- #### Numbers
 `6.9` `420`
 ```
 kilalanin decimal = 6.9;
 kilalanin integer = 420;
 ```
 
-#### Strings
+- #### Strings
 `"Isa akong lupon ng mga salita."` `""`
 ```
 kilalanin pangalan = "Felix Raffy Mark";
 ```
 
-#### Null
+- #### Null
 `null` (almost used `wala` but `null` prevails)
 ```
 // unnecessary ' = null' since uninitialized variables are assigned with null.
@@ -71,71 +73,81 @@ kilalanin wala = null;
 ```
 
 ### Mga Ekspresyon
-#### Arithmetic
-- `+` addition
-- `-` subtraction
-- `*` multiplication
-- `/` division
-- `%` modulo division (remainder)
-`1 + 2 - 3 * 4 / 5 % 6; // This results to 1 btw.`
+- #### Arithmetic
+Token | Name
+----- | ---------------------------
+  `+` | addition
+  `-` | subtraction
+  `*` | multiplication
+  `/` | division
+  `%` | modulo division (remainder)
+```
+1 + 2 - 3 * 4 / 5 % 6; // This results to 1 btw.
+```
 
-#### Unary
+- #### Unary
 `-` negation
 ```
 -10;
 -(10 - 11); // 1
 ```
 
-#### Comparison
-- `<`  less than
-- `<=` less than or equal
-- `>`  greater than
-- `>=` greater than or equal
+- #### Comparison
+Token | Name
+----- | ---------------------
+  `<` | less than
+  `<=`| less than or equal
+  `>` | greater than
+  `>=`| greater than or equal
 ```
 kung (10 < 20) {
   ipakita 30;
 }
 ```
 
-#### Equality
+- #### Equality
 - `==` equal to
 - `!=` not equal to
 ```
 "tayo" != "bagay";
 ```
 
-#### Logical Operators
-- `!`  not
-- `at` and
-- `o`  or
+- #### Logical Operators
+Token | Name
+----- | ---------------------
+ `!`  | not
+ `at` | and
+ `o`  | or
 ```
 tama o mali; // tama, 'o' at 'at' are short-circuit operators
 ```
 > For more reading about [short-circuit evaluation](https://en.wikipedia.org/wiki/Short-circuit_evaluation)
 
-#### Precedence and Grouping
+- #### Precedence and Grouping
 **Operator Precedence**
-1.  *call*            `.` `()`
-2.  *post-increment*  `++` `--`
-3.  *pre-increment*   `!` `-` `++` `--`
-4.  *factor*          `*` `/` `%`
-5.  *term*            `+` `-`
-6.  *comparison*      `<` `>` `<=` `>=`
-7.  *equality*        `==` `!=`
-8.  *and*             `at`
-9.  *or*              `o`
-10. *assignment*      `=`
+Token              | Name
+:----------------: | ---------------------
+`.` `()`           | call
+`++` `--`          | post-increment
+`!` `-` `++` `--`  | pre-increment
+`*` `/` `%`        | factor
+`+` `-`            | term
+`<` `>` `<=` `>=`  | comparison
+`==` `!=`          | equality
+`at`               | and
+`o`                | or
+`=`                | assignment
 
 > **Note:** You can always override precedence by using groupin `()`.
 
 ### Mga Pahayag
-#### Ipakita
+- #### Ipakita
 Syntax `ipakita <ekspresyon> ;`
 ```
 ipakita "Kamusta ka naman?";
 ```
 
-#### Kilalanin (Declaration / Definition)
+- #### Kilalanin (Declaration / Definition)
 *declaration*<br />
 Syntax `kilalanin <identifier> ;`
 ```
@@ -152,7 +164,7 @@ mayHalaga = 12;
 ipakita mayHalaga; // 12
 ```
 
-#### Kung [Kundiman]
+- #### Kung [Kundiman]
 Syntax `kung ( <ekspresyon> ) <pahayag> [kundiman <pahayag]`
 ```
 kilalanin edad = 16;
@@ -162,7 +174,7 @@ kundiman
   ipakita "Isa ka ng matandang nilalang.";
 ```
 
-#### Suriin [Kapag] [palya]
+- #### Suriin [Kapag] [palya]
 Syntax `suriin ( <ekspresyon> ) { [kapag <ekspresyon> : <pahayag>]+ [palya : <pahayag>] }`
 ```
 kilalanin numero = 2;
@@ -176,7 +188,7 @@ suriin (numero) {
 }
 ```
 
-#### Habang
+- #### Habang
 Syntax `habang ( <ekspresyon> ) <pahayag>`
 ```
 // Prints 0 - 9
@@ -185,7 +197,7 @@ habang (n < 10)
   ipakita n;
 ```
 
-#### Gawin-Habang
+- #### Gawin-Habang
 Syntax `gawin <pahayag> habang ( <ekspresyon> ) ;`
 ```
 // Prints 0 - 10
@@ -195,7 +207,7 @@ gawin
 habang (n < 10);
 ```
 
-#### Kada
+- #### Kada
 Syntax `kada ( <ekspresyon> ; <ekspresyon> ; <ekspresyon> ) <pahayag> `
 ```
 // Prints 0 - 9;
@@ -204,7 +216,7 @@ kada (kilalanin n = 0; n < 10; n++) {
 }
 ```
 
-#### Itigil
+- #### Itigil
 Syntax `itigil ;`
 ```
 kilalanin ctr = 0;
@@ -218,7 +230,7 @@ habang (tama) {
 ```
 > **Note:** Can only be used inside looping statements `habang` `gawin-habang` `kada`.
 
-#### Ituloy
+- #### Ituloy
 Syntax `ituloy ;`
 ```
 // DANGER!!! This will cause an infinite loop DO NOT TRY.
@@ -234,7 +246,7 @@ habang (tama) {
 ```
 > **Note:** Can only be used inside looping statements `habang` `gawin-habang` `kada`.
 
-#### Ibalik
+- #### Ibalik
 Syntax `ibalik [<ekspresyon>] ;`
 ```
 gawain pagsamahin(a, b) {
@@ -245,7 +257,7 @@ ipakita pagsamahin(34, 35); // 69
 ```
 > **Note:** Can only be used inside functions `gawain`.
 
-#### Mga Pahayag
+- #### Mga Pahayag
 Syntax `{ [<pahayag>]* }`
 ```
 kilalanin a = "labas";
@@ -256,7 +268,7 @@ kilalanin a = "labas";
 }
 ```
 
-#### Ekspresyong Pahayag
+- #### Ekspresyong Pahayag
 Syntax `<ekspresyon> ;`
 ```
 kilalanin ctr = 0;
@@ -264,7 +276,7 @@ ctr++; // Useful
 12; // Useless
 ```
 
-#### Gawain
+- #### Gawain
 Syntax `gawain <identifier> ( [<identifier> ,]* ) { <pahayag> }`
 ```
 gawain kamusta() {
@@ -274,7 +286,7 @@ gawain kamusta() {
 kamusta();
 ```
 
-#### Closures
+- #### Closures
 Syntax `gawain <identifier> ( [<identifier> ,]* ) {
   <gawain> }`
 ```
@@ -301,7 +313,7 @@ tagapalit();
 tagatingin(); // 420
 ```
 
-#### Uri
+- #### Uri
 Syntax `uri <identifier> { <pahayag>* }`
 ```
 uri Tao {
@@ -319,7 +331,7 @@ uri Tao {
 }
 ```
 
-#### Instantiation and Initialization
+- #### Instantiation and Initialization
 *instantiation*
 **Syntax** `kilalanin <identifier> = <class-name>( [<ekspresyon> ,]* ) ;`
 ```
@@ -344,7 +356,7 @@ uri Tao {
 ```  
 > **Note:** `sim` is short for `simula`.
 
-#### Inheritance
+- #### Inheritance
 Syntax `uri <identifier> < <class-name> { <pahayag> }`
 ```
 uri Estudyante < Tao {
