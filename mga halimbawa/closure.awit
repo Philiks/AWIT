@@ -1,17 +1,10 @@
-kilalanin setter;
-kilalanin getter;
-
-gawain main() {
-  kilalanin halaga = "orihinal";
-
-  gawain set() { halaga = "nabago"; }
-  gawain get() { ipakita halaga; }
-
-  setter = set;
-  getter = get;
+gawain pagsamahin(a, b) {
+  ibalik a + b;
 }
 
-main();
-getter(); // orihinal
-setter();
-getter(); // nabago
+gawain pagkakakilanlan(a) {
+  ibalik a;
+}
+
+ipakita pagkakakilanlan(pagsamahin)("Krazy ", "closure");
+ipakita pagkakakilanlan(pagsamahin)(34, 35);
