@@ -1,0 +1,7 @@
+uri Pares {}
+
+kilalanin pares = Pares();
+pares.una = 1;
+pares.pangalawa = 2;
+ipakita pares.una + pares.pangalawa;
+ipakita mayKatangian(pares, "una");
