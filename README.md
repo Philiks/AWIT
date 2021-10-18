@@ -36,12 +36,34 @@ ipakita fib(69);
 - C compiler (recommends [gcc](https://gcc.gnu.org/))
 
 ### Compilation
-- `make` (either in [AWIT](./) or in [AWIT/src](/src)
+```
+$ git clone https://github.com/Philiks/AWIT.git
+$ cd AWIT
+$ make
+```
+*or*
+```
+$ git clone https://github.com/Philiks/AWIT.git
+$ cd AWIT/src
+$ make
+```
+*you can run `make` either in [AWIT](./) or in [AWIT/src](/src)*
 > **Note:** The `awit` or `awit.exe` is located at the [AWIT/src](/src) after compilation.
 
 ### Paandarin
 - `./awit [*.awit file]` (in UNIX-based systems)
 - `./awit.exe [*.awit file]` (for Windows system)
+```
+$ src/./awit mga\ halimbawa/kamustaMundo.awit
+Kamusta, Mundo!
+```
+*or use out REPL*
+```
+$ src/./awit
+> ipakita "Kamusta, Mundo!";
+Kamusta, Mundo!
+>
+```
 > **Note:** Running without the file as argument will fire up the REPL.
 
 ## Mga Katangian
