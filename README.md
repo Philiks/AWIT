@@ -57,7 +57,7 @@ $ make
 $ src/./awit mga\ halimbawa/kamustaMundo.awit
 Kamusta, Mundo!
 ```
-*or use out REPL*
+*or use our REPL*
 ```
 $ src/./awit
 > ipakita "Kamusta, Mundo!";
