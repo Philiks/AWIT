@@ -307,7 +307,7 @@ static InterpretResult run() {
 
     printf("\n");
     disassembleInstruction(&frame->closure->function->chunk,
-        (int)(frame->ip - frame->closure->function->chunk.code));
+        (int)(ip - frame->closure->function->chunk.code));
 #endif
 
         uint8_t instruction;
