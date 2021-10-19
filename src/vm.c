@@ -62,16 +62,16 @@ static bool willNotOverflow() {
     return true;
 }
 
-static Value hasFieldNative(int argCount, Value* args) {
-    if (!(isSameArity(argCount, 2) && willNotOverflow()))
-        return BOOL_VAL(false);
-    if (!(IS_INSTANCE(args[0]) && IS_STRING(args[1])))
-        return BOOL_VAL(false);
-    
-    ObjInstance* instance = AS_INSTANCE(args[0]);
-    Value dummy;
-    return BOOL_VAL(tableGet(&instance->fields, AS_STRING(args[1]), &dummy));
-}
+//static Value hasFieldNative(int argCount, Value* args) {
+//    if (!(isSameArity(argCount, 2) && willNotOverflow()))
+//        return BOOL_VAL(false);
+//    if (!(IS_INSTANCE(args[0]) && IS_STRING(args[1])))
+//        return BOOL_VAL(false);
+//    
+//    ObjInstance* instance = AS_INSTANCE(args[0]);
+//    Value dummy;
+//    return BOOL_VAL(tableGet(&instance->fields, AS_STRING(args[1]), &dummy));
+//}
 
 static Value scanNative(int argCount, Value* args) {
     if (!(isSameArity(argCount, 0) && willNotOverflow()))
@@ -132,7 +132,7 @@ void initVM() {
 
     defineNative("oras", clockNative);
     defineNative("basahin", scanNative);
-    defineNative("mayKatangian", hasFieldNative);
+    // defineNative("mayKatangian", hasFieldNative);
 }
 
 void freeVM() {
@@ -170,11 +170,6 @@ static bool call(ObjClosure* closure, int argCount) {
 static bool callValue(Value callee, int argCount) {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
-            case OBJ_CLASS: {
-                ObjClass* klass = AS_CLASS(callee);
-                vm.stackTop[-argCount - 1] = OBJ_VAL(newInstance(klass));
-                return true;
-            }
             case OBJ_CLOSURE:
                 return call(AS_CLOSURE(callee), argCount);
             case OBJ_NATIVE: {
@@ -375,38 +370,6 @@ static InterpretResult run() {
                 *frame->closure->upvalues[slot]->location = peek(0);
                 break;
             }
-            case OP_GET_PROPERTY: {
-                if (!IS_INSTANCE(peek(0))) {
-                    runtimeError("Ang mga instansya lamang ang mayroong mga katangian.");
-                    return INTERPRET_RUNTIME_ERROR;
-                }
-
-                ObjInstance* instance = AS_INSTANCE(peek(0));
-                ObjString* name = READ_STRING();
-
-                Value value;
-                if (tableGet(&instance->fields, name, &value)) {
-                    pop(); // Instance.
-                    push(value);
-                    break;
-                }
-
-                runtimeError("Hindi kilala ang katangian '%s'.", name->chars);
-                return INTERPRET_RUNTIME_ERROR;
-            }
-            case OP_SET_PROPERTY: {
-                if (!IS_INSTANCE(peek(1))) {
-                    runtimeError("Ang mga instansya lamang ang mayroong mga katangian.");
-                    return INTERPRET_RUNTIME_ERROR;
-                }
-
-                ObjInstance* instance = AS_INSTANCE(peek(1));
-                tableSet(&instance->fields, READ_STRING(), peek(0));
-                Value value = pop();
-                pop();
-                push(value);
-                break;
-            }
             case OP_EQUAL: {
                 Value b = pop();
                 Value a = pop();
@@ -515,9 +478,6 @@ static InterpretResult run() {
                 ip = frame->ip;
                 break;
             }
-            case OP_CLASS:
-                push(OBJ_VAL(newClass(READ_STRING())));
-                break;
         }
     }
 

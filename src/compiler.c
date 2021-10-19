@@ -427,19 +427,6 @@ static void call(bool canAssign) {
     emitBytes(OP_CALL, argCount);
 }
 
-static void dot(bool canAssign) {
-    consume(TOKEN_PAGKAKAKILANLAN,
-        "Inaasahan na makakita ng pangalan ng katangian matapos ang '.'.");
-    int name = identifierConstant(&parser.previous);
-
-    if (canAssign && match(TOKEN_KATUMBAS)) {
-        expression();
-        emitVariable(OP_SET_PROPERTY, name);
-    } else {
-        emitVariable(OP_GET_PROPERTY, name);
-    }
-}
-
 static void literal(bool canAssign) {
     switch (parser.previous.type) {
         case TOKEN_MALI: emitByte(OP_FALSE); break;
@@ -585,7 +572,7 @@ ParseRule rules[] = {
     [TOKEN_KALIWANG_BRACE]   = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KANANG_BRACE]     = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KUWIT]            = {NULL,      NULL,      PREC_NONE},
-    [TOKEN_TULDOK]           = {NULL,      dot,       PREC_CALL},
+    [TOKEN_TULDOK]           = {NULL,      NULL,      PREC_NONE},
     [TOKEN_TULDOK_KUWIT]     = {NULL,      NULL,      PREC_NONE},
     [TOKEN_TUTULDOK]         = {NULL,      NULL,      PREC_NONE},
     [TOKEN_PAHILIS]          = {NULL,      binary,    PREC_FACTOR},
@@ -702,20 +689,6 @@ static void function(FunctionType type) {
         emitByte(compiler.upvalues[i].isLocal ? 1 : 0);
         emitByte(compiler.upvalues[i].index);
     }
-}
-
-static void classDeclaration() {
-    consume(TOKEN_PAGKAKAKILANLAN, "Inaasahan ang pangalan para sa uri.");
-    uint8_t nameConstant = identifierConstant(&parser.previous);
-    declareVariable();
-
-    emitBytes(OP_CLASS, nameConstant);
-    defineVariable(nameConstant);
-
-    consume(TOKEN_KALIWANG_BRACE, 
-        "Inaasahan na makakita ng '{' bago ang mga pahayag sa uri.");
-    consume(TOKEN_KANANG_BRACE, 
-        "Inaasahan na makakita ng '}' matapos ang mga pahayag sa uri.");
 }
 
 static void funDeclaration() {
@@ -1132,9 +1105,7 @@ static void synchronize() {
 }
 
 static void declaration() {
-    if (match(TOKEN_URI)) {
-        classDeclaration();
-    } else if (match(TOKEN_GAWAIN)) {
+    if (match(TOKEN_GAWAIN)) {
         funDeclaration();
     } else if (match(TOKEN_KILALANIN)) {
         varDeclaration();
