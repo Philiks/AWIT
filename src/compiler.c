@@ -427,6 +427,19 @@ static void call(bool canAssign) {
     emitBytes(OP_CALL, argCount);
 }
 
+static void dot(bool canAssign) {
+    consume(TOKEN_PAGKAKAKILANLAN, 
+            "Inaasahan ang pangalan ng katangian matapos ang '.'.");
+    uint8_t name = identifierConstant(&parser.previous);
+
+    if (canAssign && match(TOKEN_KATUMBAS)) {
+        expression();
+        emitBytes(OP_SET_PROPERTY, name);
+    } else {
+        emitBytes(OP_GET_PROPERTY, name);
+    }
+}
+
 static void literal(bool canAssign) {
     switch (parser.previous.type) {
         case TOKEN_MALI: emitByte(OP_FALSE); break;
@@ -572,7 +585,7 @@ ParseRule rules[] = {
     [TOKEN_KALIWANG_BRACE]   = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KANANG_BRACE]     = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KUWIT]            = {NULL,      NULL,      PREC_NONE},
-    [TOKEN_TULDOK]           = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_TULDOK]           = {NULL,      dot,       PREC_CALL},
     [TOKEN_TULDOK_KUWIT]     = {NULL,      NULL,      PREC_NONE},
     [TOKEN_TUTULDOK]         = {NULL,      NULL,      PREC_NONE},
     [TOKEN_PAHILIS]          = {NULL,      binary,    PREC_FACTOR},
@@ -691,17 +704,29 @@ static void function(FunctionType type) {
     }
 }
 
+static void classDeclaration() {
+    consume(TOKEN_PAGKAKAKILANLAN, "Inaasahan ang pangalan ng uri.");
+    uint8_t nameConstant = identifierConstant(&parser.previous);
+    declareVariable();
+
+    emitBytes(OP_CLASS, nameConstant);
+    defineVariable(nameConstant);
+
+    consume(TOKEN_KALIWANG_BRACE, 
+        "Inaasahan na makakita ng '{' bago ang mga pahayag sa uri.");
+    consume(TOKEN_KANANG_BRACE, 
+        "Inaasahan na makakita ng '}' matapos ang mga pahayag sa uri.");
+}
+
 static void funDeclaration() {
-    uint8_t global = parseVariable(
-        "Inaasahan ang pangalan para sa gawain.");
+    uint8_t global = parseVariable("Inaasahan ang pangalan ng gawain.");
     markInitialized();
     function(TYPE_FUNCTION);
     defineVariable(global);
 }
 
 static void varDeclaration() {
-    int global = parseVariable(
-        "Inasahan ang pangalan para sa lalagyan ng nilalaman.");
+    int global = parseVariable("Inasahan ang pangalan ng lalagyan ng nilalaman.");
 
     if (match(TOKEN_KATUMBAS)) {
         expression();
@@ -1105,7 +1130,9 @@ static void synchronize() {
 }
 
 static void declaration() {
-    if (match(TOKEN_GAWAIN)) {
+    if (match(TOKEN_URI)) {
+        classDeclaration();
+    } else if (match(TOKEN_GAWAIN)) {
         funDeclaration();
     } else if (match(TOKEN_KILALANIN)) {
         varDeclaration();
