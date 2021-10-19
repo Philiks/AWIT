@@ -169,13 +169,7 @@ static TokenType identifierType() {
         case 'n': return checkKeyword(1, 3, "ull", TOKEN_NULL);
         case 'o': return checkKeyword(1, 0, "o", TOKEN_O);
         case 'p': return checkKeyword(1, 4, "alya", TOKEN_PALYA);
-        case 's': 
-            if (scanner.current - scanner.start > 1) {
-                switch (scanner.start[1]) {
-                    case 'i': return checkKeyword(2, 1, "m", TOKEN_SIM);
-                    case 'u': return checkKeyword(2, 4, "riin", TOKEN_SURIIN);
-                }
-            }
+        case 's': return checkKeyword(1, 5, "uriin", TOKEN_SURIIN);
         case 't': return checkKeyword(1, 3, "ama", TOKEN_TAMA);
         case 'u': return checkKeyword(1, 2, "ri", TOKEN_URI);
     }
