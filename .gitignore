@@ -1,5 +1,5 @@
 *.o
 # For windows-based system.
-awit.exe
+src/awit.exe
 # For unix-based system.
-awit
+src/awit
