@@ -117,6 +117,9 @@ static void blackenObject(Obj* object) {
         case OBJ_UPVALUE:
             markValue(((ObjUpvalue*)object)->closed);
             break;
+	case OBJ_STRING:
+	case OBJ_NATIVE:
+	    break; // Unreachable. Handled by the caller's if-statement.
     }
 }
 
