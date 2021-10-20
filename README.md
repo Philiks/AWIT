@@ -32,8 +32,17 @@ ipakita fib(69);
 
 ## Panimulang Hakbang
 ### Mga Kailangan:
+#### Windows
+- [Git](https://git-scm.com/downloads/win)
+- [Make and C compiler](https://github.com/mstorsjo/llvm-mingw/releases/tag/20211002) llvm-mingw-20211002-msvcrt-i686.zip
+> We recommend llvm-mingw for the **make** and **C compiler** but you are free to choose your preffered **make** and **C compiler**.
+#### Linux
+- [Git](https://git-scm.com/download/linux)
 - [Make](https://www.gnu.org/software/make/manual/make.html)
-- C compiler (recommends [gcc](https://gcc.gnu.org/))
+- [C compiler](https://gcc.gnu.org/))
+#### Or you can just get the latest release:
+- for **WINDOWS**-based systems [AWIT v0.9.8](https://github.com/Philiks/AWIT/releases/download/v0.9.8/awit_windows.zip)
+- for **LINUX**-based systems [AWIT v0.9.8](https://github.com/Philiks/AWIT/releases/download/v0.9.8/awit_linux.tar.xz)
 
 ### Compilation
 ```
@@ -51,8 +60,8 @@ $ make
 > **Note:** The `awit` or `awit.exe` is located at the [AWIT/src](/src) after compilation.
 
 ### Paandarin
-- `./awit [*.awit file]` (in UNIX-based systems)
-- `./awit.exe [*.awit file]` (for Windows system)
+- `./awit [*.awit file]` (in LINUX-based systems)
+- `awit.exe [*.awit file]` (for Windows system)
 ```
 $ src/./awit mga\ halimbawa/kamustaMundo.awit
 Kamusta, Mundo!
@@ -90,7 +99,8 @@ kilalanin pangalan = "Felix Raffy Mark";
 - #### Null
 `null` (almost used `wala` but `null` prevails)
 ```
-// unnecessary ' = null' since uninitialized variables are assigned with null.
+// unnecessary ' = null' since uninitialized
+// variables are assigned with null.
 kilalanin wala = null;
 ```
 
@@ -164,21 +174,21 @@ Token              | Name
 
 ### Mga Pahayag
 - #### Ipakita
-Syntax `ipakita <ekspresyon> ;`
+-- Syntax `ipakita <ekspresyon> ;`
 ```
 ipakita "Kamusta ka naman?";
 ```
 
 - #### Kilalanin (Declaration / Definition)
-*declaration*<br />
-Syntax `kilalanin <identifier> ;`
+-- *declaration*<br />
+-- Syntax `kilalanin <identifier> ;`
 ```
 kilalanin walangHalaga;
 ipakita walangHalaga; // null
 ```
 
-*definition*<br />
-Syntax `[kilalanin] <identifier> = <ekspresyon> ;`
+-- *definition*<br />
+-- Syntax `[kilalanin] <identifier> = <ekspresyon> ;`
 ```
 kilalanin mayHalaga = tama;
 ipakita mayHalaga; // tama
@@ -187,7 +197,7 @@ ipakita mayHalaga; // 12
 ```
 
 - #### Kung [Kundiman]
-Syntax `kung ( <ekspresyon> ) <pahayag> [kundiman <pahayag]`
+-- Syntax `kung ( <ekspresyon> ) <pahayag> [kundiman <pahayag]`
 ```
 kilalanin edad = 16;
 kung (edad < 18)
@@ -196,8 +206,8 @@ kundiman
   ipakita "Isa ka ng matandang nilalang.";
 ```
 
-- #### Suriin [Kapag] [palya]
-Syntax `suriin ( <ekspresyon> ) { [kapag <ekspresyon> : <pahayag>]+ [palya : <pahayag>] }`
+- #### Suriin [Kapag] [Palya]
+-- Syntax `suriin ( <ekspresyon> ) { [kapag <ekspresyon> : <pahayag>]+ [palya : <pahayag>] }`
 ```
 kilalanin numero = 2;
 suriin (numero) {
@@ -211,7 +221,7 @@ suriin (numero) {
 ```
 
 - #### Habang
-Syntax `habang ( <ekspresyon> ) <pahayag>`
+-- Syntax `habang ( <ekspresyon> ) <pahayag>`
 ```
 // Prints 0 - 9
 kilalanin n = 0;
@@ -220,7 +230,7 @@ habang (n < 10)
 ```
 
 - #### Gawin-Habang
-Syntax `gawin <pahayag> habang ( <ekspresyon> ) ;`
+-- Syntax `gawin <pahayag> habang ( <ekspresyon> ) ;`
 ```
 // Prints 0 - 10
 kilalanin n = 0;
@@ -230,7 +240,7 @@ habang (n < 10);
 ```
 
 - #### Kada
-Syntax `kada ( <ekspresyon> ; <ekspresyon> ; <ekspresyon> ) <pahayag> `
+-- Syntax `kada ( <ekspresyon> ; <ekspresyon> ; <ekspresyon> ) <pahayag> `
 ```
 // Prints 0 - 9;
 kada (kilalanin n = 0; n < 10; n++) {
@@ -239,7 +249,7 @@ kada (kilalanin n = 0; n < 10; n++) {
 ```
 
 - #### Itigil
-Syntax `itigil ;`
+-- Syntax `itigil ;`
 ```
 kilalanin ctr = 0;
 habang (tama) {
@@ -253,7 +263,7 @@ habang (tama) {
 > **Note:** Can only be used inside looping statements `habang` `gawin-habang` `kada`.
 
 - #### Ituloy
-Syntax `ituloy ;`
+-- Syntax `ituloy ;`
 ```
 // DANGER!!! This will cause an infinite loop DO NOT TRY.
 // Pero ikaw bahala ;)
@@ -269,7 +279,7 @@ habang (tama) {
 > **Note:** Can only be used inside looping statements `habang` `gawin-habang` `kada`.
 
 - #### Ibalik
-Syntax `ibalik [<ekspresyon>] ;`
+-- Syntax `ibalik [<ekspresyon>] ;`
 ```
 gawain pagsamahin(a, b) {
   ibalik a;
@@ -280,7 +290,7 @@ ipakita pagsamahin(34, 35); // 69
 > **Note:** Can only be used inside functions `gawain`.
 
 - #### Mga Pahayag
-Syntax `{ [<pahayag>]* }`
+-- Syntax `{ [<pahayag>]* }`
 ```
 kilalanin a = "labas";
 {
@@ -291,7 +301,7 @@ kilalanin a = "labas";
 ```
 
 - #### Ekspresyong Pahayag
-Syntax `<ekspresyon> ;`
+-- Syntax `<ekspresyon> ;`
 ```
 kilalanin ctr = 0;
 ctr++; // Useful
@@ -299,7 +309,7 @@ ctr++; // Useful
 ```
 
 - #### Gawain
-Syntax `gawain <identifier> ( [<identifier> ,]* ) { <pahayag> }`
+-- Syntax `gawain <identifier> ( [<identifier> ,]* ) { <pahayag> }`
 ```
 gawain kamusta() {
   ipakita "Kamusta!";
@@ -309,7 +319,7 @@ kamusta();
 ```
 
 - #### Closures
-Syntax `gawain <identifier> ( [<identifier> ,]* ) {
+-- Syntax `gawain <identifier> ( [<identifier> ,]* ) {
   <gawain> }`
 ```
 kilalanin tagapalit;
@@ -336,7 +346,7 @@ tagatingin(); // 420
 ```
 
 - #### Uri
-Syntax `uri <identifier> { <pahayag>* }`
+-- Syntax `uri <identifier> { <pahayag>* }`
 ```
 uri Tao {
   kain() {
@@ -352,10 +362,16 @@ uri Tao {
   }
 }
 ```
+*AWIT is dynamically-typed language therefore you cant define a field after instantiation.*
+```
+uri Programmer {}
+kilalanin programmer = Programmer();
+programmer.puyat = tama;
+```
 
 - #### Instantiation and Initialization
-*instantiation*<br />
-Syntax `kilalanin <identifier> = <class-name>( [<ekspresyon> ,]* ) ;`
+-- *instantiation*<br />
+-- Syntax `kilalanin <identifier> = <class-name>( [<ekspresyon> ,]* ) ;`
 ```
 kilalanin tao = Tao();
 tao.kain();
@@ -363,13 +379,10 @@ tao.tulog();
 tao.laro();
 ```
 
-*initialization*<br />
-Syntax `sim ( [<identifier> ,]* ) { <pahayag> }`
+-- *initialization*<br />
+-- Syntax `sim ( [<identifier> ,]* ) { <pahayag> }`
 ```
 uri Tao {
-  kilalanin pangalan;
-  kilalanin kasarian;
-
   sim(pangalan, kasarian) {
     ito.pangalan = pangalan;
     ito.kasarian = kasarian;
@@ -377,13 +390,13 @@ uri Tao {
 }
 ```  
 > **Note:** `sim` is short for `simula`.
+> **Note:** You cannot use `ibalik` with a value beside it inside `sim`.
+> **Note:** You don't have to put the fields inside the `uri` just prefix it with `ito.`.
 
 - #### Inheritance
-Syntax `uri <identifier> < <class-name> { <pahayag> }`
+-- Syntax `uri <identifier> < <class-name> { <pahayag> }`
 ```
 uri Estudyante < Tao {
-  kilalanin pangkatTaon;
-
   sim(pangkatTaon, pangalan, kasarian) {
     mula.sim(pangalan, kasarian);
     ito.pangkatTaon = pangkatTaon;
@@ -400,6 +413,26 @@ felix.laro();
 felix.uwi();
 felix.tulog();
 ```
+> **Note:** You can user `mula` to access parent's fields and methods.
+
+### Katutubong Gawain (Native Functions)
+- #### oras()
+*Returns* the current time in seconds in type `double`.
+
+- #### basahin()
+*Reads* an input from the user from the STDIN.
+*Returns* `double` if the input is a number. Otherwise it will return `string`.
+
+- #### mayKatangian(<class-name>, <field-name>)
+*<class-name>* `uri` the class instance in which the field-name will be searched.
+*<field-name>* `string` the field to be searched.
+*Returns* `tama` if found. Otherwise it will return `mali`.
+
+## Reserved Words
+AWIT have 22 reserved words and they are:<br />
+`at`, `gawain`, `gawin`, `habang`, `ibalik`, `ipakita`, `itigil`, `ito`,
+`ituloy`, `kada`, `kapag`, `kilalanin`, `kundiman`, `kung`, `mali`, `mula`,
+`null`, `palya`, `suriin`, `o`, `tama`, `uri`
 
 ## Authors
 This language is all thanks to these people:<br />
