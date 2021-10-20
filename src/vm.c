@@ -131,7 +131,7 @@ void initVM() {
     initTable(&vm.strings);
 
     vm.initString = NULL;
-    vm.initString = copyString("ito", 3);
+    vm.initString = copyString("sim", 3);
 
     defineNative("oras", clockNative);
     defineNative("basahin", scanNative);

@@ -736,7 +736,7 @@ static void method() {
 
     FunctionType type = TYPE_METHOD;
     if (parser.previous.length == 3 &&
-        memcmp(parser.previous.start, "ito", 3) == 0) {
+        memcmp(parser.previous.start, "sim", 3) == 0) {
         type = TYPE_INITIALIZER;
     }
 
