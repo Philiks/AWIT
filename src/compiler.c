@@ -57,6 +57,8 @@ typedef struct {
 
 typedef enum {
     TYPE_FUNCTION,
+    TYPE_INITIALIZER,
+    TYPE_METHOD,
     TYPE_SCRIPT
 } FunctionType;
 
@@ -71,8 +73,13 @@ typedef struct Compiler {
     int scopeDepth;
 } Compiler;
 
+typedef struct ClassCompiler {
+    struct ClassCompiler* enclosing;
+} ClassCompiler;
+
 Parser parser;
 Compiler* current = NULL;
+ClassCompiler* currentClass = NULL;
 
 int innermostLoopStart = -1;
 int innermostLoopExits[MAX_BREAKS]; // Can also be used on Switch.
@@ -174,8 +181,13 @@ static void initCompiler(Compiler* compiler, FunctionType type) {
     Local* local = &current->locals[current->localCount++];
     local->depth = 0;
     local->isCaptured = false;
-    local->name.start = "";
-    local->name.length = 0;
+    if (type != TYPE_FUNCTION) {
+        local->name.start = "ito";
+        local->name.length = 3;
+    } else {
+        local->name.start = "";
+        local->name.length = 0;
+    }
 }
 
 static void emitByte(uint8_t byte) {
@@ -217,7 +229,12 @@ static int emitJump(uint8_t instruction) {
 }
 
 static void emitReturn() {
-    emitByte(OP_NULL);
+    if (current->type == TYPE_INITIALIZER) {
+        emitBytes(OP_GET_LOCAL, 0);
+    } else {
+        emitByte(OP_NULL);
+    }
+
     emitByte(OP_RETURN);
 }
 
@@ -560,6 +577,15 @@ static void variable(bool canAssign) {
     namedVariable(parser.previous, canAssign);
 }
 
+static void this_(bool canAssign) {
+    if (currentClass == NULL) {
+        error("Hindi maaaring gamitin ang 'ito' sa labas ng uri.");
+        return;
+    }
+
+    variable(false);
+}
+
 static void unary(bool canAssign) {
     TokenType operatorType = parser.previous.type;
 
@@ -613,7 +639,7 @@ ParseRule rules[] = {
     [TOKEN_IBALIK]           = {NULL,      NULL,      PREC_NONE},
     [TOKEN_IPAKITA]          = {NULL,      NULL,      PREC_NONE},
     [TOKEN_ITIGIL]           = {NULL,      NULL,      PREC_NONE},
-    [TOKEN_ITO]              = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_ITO]              = {this_,     NULL,      PREC_NONE},
     [TOKEN_ITULOY]           = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KADA]             = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KAPAG]            = {NULL,      NULL,      PREC_NONE},
@@ -704,18 +730,44 @@ static void function(FunctionType type) {
     }
 }
 
+static void method() {
+    consume(TOKEN_PAGKAKAKILANLAN, "Inaasahan ang pangalan ng instansyang gawain.");
+    uint8_t constant = identifierConstant(&parser.previous);
+
+    FunctionType type = TYPE_METHOD;
+    if (parser.previous.length == 3 &&
+        memcmp(parser.previous.start, "ito", 3) == 0) {
+        type = TYPE_INITIALIZER;
+    }
+
+    function(type);
+    emitBytes(OP_METHOD, constant);
+}
+
 static void classDeclaration() {
     consume(TOKEN_PAGKAKAKILANLAN, "Inaasahan ang pangalan ng uri.");
+    Token className = parser.previous;
     uint8_t nameConstant = identifierConstant(&parser.previous);
     declareVariable();
 
     emitBytes(OP_CLASS, nameConstant);
     defineVariable(nameConstant);
 
+    ClassCompiler classCompiler;
+    classCompiler.enclosing = currentClass;
+    currentClass = &classCompiler;
+
+    namedVariable(className, false);
     consume(TOKEN_KALIWANG_BRACE, 
         "Inaasahan na makakita ng '{' bago ang mga pahayag sa uri.");
+    while (!check(TOKEN_KANANG_BRACE) && !check(TOKEN_DULO)) {
+        method();
+    }
     consume(TOKEN_KANANG_BRACE, 
         "Inaasahan na makakita ng '}' matapos ang mga pahayag sa uri.");
+    emitByte(OP_POP);
+
+    currentClass = currentClass->enclosing;
 }
 
 static void funDeclaration() {
@@ -980,6 +1032,10 @@ static void returnStatement() {
     if (match(TOKEN_TUTULDOK)) {
         emitReturn();
     } else {
+        if (current->type == TYPE_INITIALIZER) {
+            error("Hindi maaaring magbalik ng halaga sa loob ng tagapag simula.");
+        }
+
         expression();
         consume(TOKEN_TULDOK_KUWIT,
             "Inasahan na makakita ng ';' matapos ang ibabalik na halaga.");
