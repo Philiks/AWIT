@@ -6,7 +6,7 @@
 #include "table.h"
 #include "value.h"
 
-#define OBJ_TYPE(value)     (objType(AS_OBJ(value)))
+#define OBJ_TYPE(value)        (objType(AS_OBJ(value)))
 
 #define IS_BOUND_METHOD(value) isObjType(value, OBJ_BOUND_METHOD)
 #define IS_CLASS(value)        isObjType(value, OBJ_CLASS)
