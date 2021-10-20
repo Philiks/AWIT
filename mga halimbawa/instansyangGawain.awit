@@ -1,0 +1,15 @@
+uri CoffeeMaker {
+  sim(kape) {
+    ito.kape = kape;
+  }
+
+  timpla() {
+    ipakita "Namnamin ang iyong tasa ng " + ito.kape;
+
+    // Isang gamitan lang ang kape.
+    ito.kape = null;
+  }
+}
+
+kilalanin maker = CoffeeMaker("barako");
+maker.timpla();

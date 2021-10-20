@@ -32,7 +32,7 @@ static char* readFile(const char* path) {
     size_t fileSize = ftell(file);
     rewind(file);
 
-    char* buffer = (char*)malloc(fileSize + 2);
+    char* buffer = (char*)malloc(fileSize + 1);
     if (buffer == NULL) {
         fprintf(stderr, "Kinulang ng puwesto upang basahin ang \"%s\".\n", path);
         exit(74);
@@ -44,8 +44,7 @@ static char* readFile(const char* path) {
         exit(74);
     }
 
-    buffer[byteRead] = '\n';
-    buffer[byteRead + 1] = '\0';
+    buffer[byteRead] = '\0';
 
     fclose(file);
     return buffer;
