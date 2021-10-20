@@ -452,6 +452,10 @@ static void dot(bool canAssign) {
     if (canAssign && match(TOKEN_KATUMBAS)) {
         expression();
         emitBytes(OP_SET_PROPERTY, name);
+    } else if (match(TOKEN_KALIWANG_PAREN)) {
+        uint8_t argCount = argumentList();
+        emitBytes(OP_INVOKE, name);
+        emitByte(argCount);
     } else {
         emitBytes(OP_GET_PROPERTY, name);
     }
@@ -736,7 +740,7 @@ static void method() {
 
     FunctionType type = TYPE_METHOD;
     if (parser.previous.length == 3 &&
-        memcmp(parser.previous.start, "ito", 3) == 0) {
+        memcmp(parser.previous.start, "sim", 3) == 0) {
         type = TYPE_INITIALIZER;
     }
 
