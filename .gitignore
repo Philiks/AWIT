@@ -1,1 +1,5 @@
 *.o
+# For windows-based system.
+awit.exe
+# For unix-based system.
+awit
