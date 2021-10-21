@@ -114,7 +114,7 @@ static inline bool objMark(Obj* object) {
 }
 
 static inline Obj* objNext(Obj* object) {
-    return (Obj*)((object->header >> 8) & 0x00ffffffffffff);
+    return (Obj*)((object->header >> 8) & 0x00ffffffffffff00);
 }
 
 static inline ObjType objType(Obj* object) {
@@ -129,6 +129,11 @@ static inline void setMark(Obj* object, bool mark) {
 static inline void setObjNext(Obj* object, Obj* next) {
     object->header = (object->header & 0xff000000000000ff) |
         ((uint64_t)next << 8);
+}
+
+static inline void setType(Obj* object, ObjType type) {
+    object->header = (object->header & 0x000000000000000f) |
+		    ((uint64_t)type);
 }
 
 static inline bool isObjType(Value value, ObjType type) {
