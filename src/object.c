@@ -13,7 +13,8 @@
 static Obj* allocateObject(size_t size, ObjType type) {
     Obj* object = (Obj*)reallocate(NULL, 0, size);
     setMark(object, !vm.markValue);
-    object->header = (unsigned long)vm.objects << 8 | (unsigned long) type;
+		setObjNext(object, vm.objects);
+		setType(object, type);
     vm.objects = object;
     
 #ifdef DEBUG_LOG_GC
