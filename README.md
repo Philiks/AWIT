@@ -24,10 +24,10 @@ Recursive program to print the 69th number in fibonacci sequence:
 gawain fibonacci(n) {
   kung (n < 2) ibalik n;
 
-  ibalik fib(n - 2) + fib(n - 1);
+  ibalik fibonacci(n - 2) + fibonacci(n - 1);
 }
 
-ipakita fib(69);
+ipakita fib(35); // This will take a couple of seconds.
 ```
 
 ## Panimulang Hakbang
