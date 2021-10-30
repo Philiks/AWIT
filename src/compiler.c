@@ -75,6 +75,7 @@ typedef struct Compiler {
 
 typedef struct ClassCompiler {
     struct ClassCompiler* enclosing;
+    bool hasSuperclass;
 } ClassCompiler;
 
 Parser parser;
@@ -581,6 +582,36 @@ static void variable(bool canAssign) {
     namedVariable(parser.previous, canAssign);
 }
 
+static Token syntheticToken(const char* text) {
+    Token token;
+    token.start = text;
+    token.length = (int)strlen(text);
+    return token;
+}
+
+static void super_(bool canAssign) {
+    if (currentClass == NULL) {
+        error("Hindi maaaring gamitin ang 'mula' sa labas ng uri.");
+    } else if (!currentClass->hasSuperclass) {
+        error("Hindi maaaring gamitin ang 'mula' sa uri na walang pinagmamanahan.");
+    }
+     
+    consume(TOKEN_TULDOK, "Inaasahan na makakita ng '.' matapos ang 'mula'.");
+    consume(TOKEN_PAGKAKAKILANLAN, "Inaasahan ang pangalan ng gawain sa pinagmulang uri.");
+    uint8_t name = identifierConstant(&parser.previous);
+
+    namedVariable(syntheticToken("ito"), false);
+    if (match(TOKEN_KALIWANG_PAREN)) {
+        uint8_t argCount = argumentList();
+        namedVariable(syntheticToken("mula"), false);
+        emitBytes(OP_SUPER_INVOKE, name);
+        emitByte(argCount);
+    } else {
+        namedVariable(syntheticToken("mula"), false);
+        emitBytes(OP_GET_SUPER, name);
+    }
+}
+
 static void this_(bool canAssign) {
     if (currentClass == NULL) {
         error("Hindi maaaring gamitin ang 'ito' sa labas ng uri.");
@@ -651,7 +682,7 @@ ParseRule rules[] = {
     [TOKEN_KUNDIMAN]         = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KUNG]             = {NULL,      NULL,      PREC_NONE},
     [TOKEN_MALI]             = {literal,   NULL,      PREC_NONE},
-    [TOKEN_MULA]             = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_MULA]             = {super_,    NULL,      PREC_NONE},
     [TOKEN_NULL]             = {literal,   NULL,      PREC_NONE},
     [TOKEN_O]                = {NULL,      or_,       PREC_OR},
     [TOKEN_PALYA]            = {NULL,      NULL,      PREC_NONE},
@@ -758,8 +789,27 @@ static void classDeclaration() {
     defineVariable(nameConstant);
 
     ClassCompiler classCompiler;
+    classCompiler.hasSuperclass = false;
     classCompiler.enclosing = currentClass;
     currentClass = &classCompiler;
+
+    if (match(TOKEN_BABA)) {
+        consume(TOKEN_PAGKAKAKILANLAN, 
+            "Inaasahan ang pangalan ng pagmamanahang uri.");
+        variable(false);
+
+        if (identifiersEqual(&className, &parser.previous)) {
+            error("Hindi maaaring magmana ang uri sa kanyang sarili.");
+        }
+
+        beginScope();
+        addLocal(syntheticToken("mula"));
+        defineVariable(0);
+
+        namedVariable(className, false);
+        emitByte(OP_INHERIT);
+        classCompiler.hasSuperclass = true;
+    }
 
     namedVariable(className, false);
     consume(TOKEN_KALIWANG_BRACE, 
@@ -770,6 +820,10 @@ static void classDeclaration() {
     consume(TOKEN_KANANG_BRACE, 
         "Inaasahan na makakita ng '}' matapos ang mga pahayag sa uri.");
     emitByte(OP_POP);
+
+    if (classCompiler.hasSuperclass) {
+        endScope();
+    }
 
     currentClass = currentClass->enclosing;
 }
