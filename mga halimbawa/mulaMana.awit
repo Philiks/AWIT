@@ -1,0 +1,14 @@
+uri A {
+  c() {
+    ipakita "YES";
+  }
+}
+
+uri B {
+  c(again) {
+    ipakita again;
+  }
+}
+
+kilalanin b = B();
+b.c("YES AGAIN");

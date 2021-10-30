@@ -1,0 +1,28 @@
+uri Tao {
+  sim() {
+    ito.ngalan = "TAO";
+  }
+
+  kain() {
+    ipakita "Ang tao ay kumakain.";
+  }
+}
+
+uri Estudyante < Tao {
+  sim() {
+    ito.ngalan = "ESTUDYANTE";
+  }
+
+  kain(sino) {
+    ipakita sino + " ay kumakain.";
+  }
+
+  aral() {
+    ipakita "Ang estudyante ay nagaaral.";
+  }
+}
+
+kilalanin estudyante = Estudyante();
+estudyante.kain("Ako");
+estudyante.aral();
+ipakita estudyante.ngalan;
