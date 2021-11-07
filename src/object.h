@@ -8,6 +8,7 @@
 
 #define OBJ_TYPE(value)        (objType(AS_OBJ(value)))
 
+#define IS_ARRAY(value)        isObjType(value, OBJ_ARRAY)
 #define IS_BOUND_METHOD(value) isObjType(value, OBJ_BOUND_METHOD)
 #define IS_CLASS(value)        isObjType(value, OBJ_CLASS)
 #define IS_CLOSURE(value)      isObjType(value, OBJ_CLOSURE)
@@ -16,6 +17,7 @@
 #define IS_NATIVE(value)       isObjType(value, OBJ_NATIVE)
 #define IS_STRING(value)       isObjType(value, OBJ_STRING)
 
+#define AS_ARRAY(value)        ((ObjArray*)AS_OBJ(value))
 #define AS_BOUND_METHOD(value) ((ObjBoundMethod*)AS_OBJ(value))
 #define AS_CLASS(value)        ((ObjClass*)AS_OBJ(value))
 #define AS_CLOSURE(value)      ((ObjClosure*)AS_OBJ(value))
@@ -27,6 +29,7 @@
 #define AS_CSTRING(value)      (((ObjString*)AS_OBJ(value))->chars)
 
 typedef enum {
+    OBJ_ARRAY,
     OBJ_BOUND_METHOD,
     OBJ_CLASS,
     OBJ_CLOSURE,
@@ -98,6 +101,12 @@ typedef struct {
     ObjClosure* method;
 } ObjBoundMethod;
 
+typedef struct {
+    Obj obj;
+    ValueArray elements;
+} ObjArray;
+
+ObjArray* newArray();
 ObjBoundMethod* newBoundMethod(Value receiver, ObjClosure* method);
 ObjClass* newClass(ObjString* name);
 ObjClosure* newClosure(ObjFunction* function);
@@ -114,7 +123,7 @@ static inline bool objMark(Obj* object) {
 }
 
 static inline Obj* objNext(Obj* object) {
-    return (Obj*)((object->header >> 8) & 0x00ffffffffffff00);
+    return (Obj*)((object->header >> 8) & 0x00ffffffffffff);
 }
 
 static inline ObjType objType(Obj* object) {
@@ -132,11 +141,12 @@ static inline void setObjNext(Obj* object, Obj* next) {
 }
 
 static inline void setType(Obj* object, ObjType type) {
-    object->header = (object->header & 0x000000000000000f) |
+    object->header = (object->header & 0xffffffffffffff00) |
 		    ((uint64_t)type);
 }
 
 static inline bool isObjType(Value value, ObjType type) {
+    ObjType objTYPE = objType(AS_OBJ(value));
     return IS_OBJ(value) && objType(AS_OBJ(value)) == type;
 }
 
