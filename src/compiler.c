@@ -877,11 +877,52 @@ static void funDeclaration() {
     defineVariable(global);
 }
 
+static void declareArray() {
+    int dimension = 0;
+
+    do {
+        dimension++;
+
+        consume(TOKEN_KALIWANG_BRACKET,
+                "Inaasahan na makakita ng '[' bago ang indeks.");
+       
+        // Array Size.
+        if (check(TOKEN_KANANG_BRACKET)) emitConstant(NUMBER_VAL(0));
+        else expression();
+
+        // The stack will continuously store array sizes if it is a multi dimensional 
+        // array and emit an OP_MULTI_ARRAY.
+        // Otherwise it will only have one array size and emit an OP_DECLARE_ARRAY.
+
+        consume(TOKEN_KANANG_BRACKET,
+                "Inaasahan na makakita ng ']' matapos ang indeks.");
+       
+        if (check(TOKEN_KATUMBAS))
+            error("Hindi maaaring maglagay ng paunang laman sa isang koleksyon matapos itong ideklara.");
+    } while (!check(TOKEN_TULDOK_KUWIT) && !check(TOKEN_DULO));
+
+    if (dimension == 1) {
+        emitByte(OP_DECLARE_ARRAY);
+        return;
+    }
+
+    if (dimension > UINT8_MAX) {
+        error("Masyadong maraming koleksyon para sa isang pagkakakilanlan.");
+    }
+
+    // MULTI_ARRAY needs the rightmost array on top of the stack since its values
+    // will be copied into the enclosing array.
+    emitByte(OP_DECLARE_ARRAY);
+    emitBytes(OP_MULTI_ARRAY, (uint8_t)dimension);
+}
+
 static void varDeclaration() {
     int global = parseVariable("Inasahan ang pangalan ng lalagyan ng nilalaman.");
 
     if (match(TOKEN_KATUMBAS)) {
         expression();
+    } else if (check(TOKEN_KALIWANG_BRACKET)) {
+        declareArray();
     } else {
         emitByte(OP_NULL);
     }
