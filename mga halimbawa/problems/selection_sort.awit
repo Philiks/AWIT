@@ -1,0 +1,25 @@
+kilalanin a = [3, 5, 1, 4, 2];
+kilalanin len = 5;
+
+kilalanin array = "Unsorted array -> ";
+kada (kilalanin i = 0; i < len; i++)
+  array = array + " " + a[i];
+ipakita array;
+
+kada (kilalanin i = 0; i < len; i++)
+{
+  kilalanin lowest_index = i;
+  
+  kada (kilalanin j = i; j < len; j++)
+    kung (a[lowest_index] > a[j])
+      lowest_index = j;
+
+  kilalanin temp = a[i];
+  a[i] = a[lowest_index];
+  a[lowest_index] = temp;
+}
+
+kilalanin array = "Sorted array   -> ";
+kada (kilalanin i = 0; i < len; i++)
+  array = array + " " + a[i];
+ipakita array;
