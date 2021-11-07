@@ -403,6 +403,22 @@ static void defineVariable(int global) {
     emitBytes(OP_DEFINE_GLOBAL, global);
 }
 
+static uint8_t elementList() {
+    uint8_t argCount = 0;
+    if (!check(TOKEN_KANANG_BRACKET)) {
+        do {
+            expression();
+            if (argCount == 255) {
+                error("Hindi maaaring magkaroon ng higit sa 255 na mga halaga");
+            }
+            argCount++;
+        } while (match(TOKEN_KUWIT));
+    }
+    consume(TOKEN_KANANG_BRACKET, 
+        "Inaasahan na makakita ng ']' matapos ang mga halaga.");
+    return argCount;
+}
+
 static uint8_t argumentList() {
     uint8_t argCount = 0;
     if (!check(TOKEN_KANANG_PAREN)) {
@@ -443,6 +459,30 @@ static void binary(bool canAssign) {
 static void call(bool canAssign) {
     uint8_t argCount = argumentList();
     emitBytes(OP_CALL, argCount);
+}
+
+static void element(bool canAssign) {
+    // We can't read parser.previous for the variable name
+    // since there will be cases like name[indexOne][indexTwo]
+    // so we leave everything on the stack.
+    expression();
+    consume(TOKEN_KANANG_BRACKET, "Inaasahan na makakita ng ']' matapos ang ekspresyon.");
+    
+    if (canAssign) {
+        if (match(TOKEN_KATUMBAS)) {
+            expression();
+            emitByte(OP_SET_ELEMENT);
+        } else {
+            emitByte(OP_GET_ELEMENT);
+        }
+    } else {
+        emitByte(OP_GET_ELEMENT);
+    }
+}
+
+static void array(bool canAssign) {
+    uint8_t elementCount = elementList();
+    emitBytes(OP_DEFINE_ARRAY, elementCount);
 }
 
 static void dot(bool canAssign) {
@@ -645,6 +685,8 @@ ParseRule rules[] = {
     [TOKEN_KANANG_PAREN]     = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KALIWANG_BRACE]   = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KANANG_BRACE]     = {NULL,      NULL,      PREC_NONE},
+    [TOKEN_KALIWANG_BRACKET] = {array,     element,   PREC_CALL},
+    [TOKEN_KANANG_BRACKET]   = {NULL,      NULL,      PREC_NONE},
     [TOKEN_KUWIT]            = {NULL,      NULL,      PREC_NONE},
     [TOKEN_TULDOK]           = {NULL,      dot,       PREC_CALL},
     [TOKEN_TULDOK_KUWIT]     = {NULL,      NULL,      PREC_NONE},
