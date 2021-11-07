@@ -24,6 +24,12 @@ static Obj* allocateObject(size_t size, ObjType type) {
     return object;
 }
 
+ObjArray* newArray() {
+    ObjArray* array = ALLOCATE_OBJ(ObjArray, OBJ_ARRAY);
+    initValueArray(&array->elements);
+    return array;
+}
+
 ObjBoundMethod* newBoundMethod(Value receiver, ObjClosure* method) {
     ObjBoundMethod* bound = ALLOCATE_OBJ(ObjBoundMethod, OBJ_BOUND_METHOD);
     bound->receiver = receiver;
@@ -124,8 +130,21 @@ static void printFunction(ObjFunction* function) {
     printf("<gwn %s>", function->name->chars);
 }
 
+static void printArray(ValueArray array) {
+    printf("[ ");
+    for (int i = 0; i < array.count; i++) {
+        printValue(array.values[i]);
+        printf(", ");
+    }
+    
+    printf("\b\b ]");
+}
+
 void printObject(Value value) {
     switch (OBJ_TYPE(value)) {
+        case OBJ_ARRAY:
+            printArray(AS_ARRAY(value)->elements);
+            break;
         case OBJ_BOUND_METHOD:
             printFunction(AS_BOUND_METHOD(value)->method->function);
             break;
@@ -149,8 +168,8 @@ void printObject(Value value) {
         case OBJ_STRING:
             printf("%.*s", AS_STRING(value)->length, AS_CSTRING(value));
             return;
-	case OBJ_UPVALUE:
-	    printf("upvalue");
-	    break;
+        case OBJ_UPVALUE:
+            printf("upvalue");
+            break;
     }
 }
