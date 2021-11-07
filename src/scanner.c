@@ -224,6 +224,8 @@ Token scanToken() {
         case ')': return makeToken(TOKEN_KANANG_PAREN);
         case '{': return makeToken(TOKEN_KALIWANG_BRACE);
         case '}': return makeToken(TOKEN_KANANG_BRACE);
+        case '[': return makeToken(TOKEN_KALIWANG_BRACKET);
+        case ']': return makeToken(TOKEN_KANANG_BRACKET);
         case ':': return makeToken(TOKEN_TUTULDOK);
         case ';': return makeToken(TOKEN_TULDOK_KUWIT);
         case ',': return makeToken(TOKEN_KUWIT);
