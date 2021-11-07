@@ -11,6 +11,18 @@ void initValueArray(ValueArray* array) {
     array->values = NULL;
 }
 
+void copyValueArray(ValueArray* from, ValueArray* to) {
+    to->count = from->count;
+    to->capacity = from->capacity;
+    to->values = GROW_ARRAY(Value, to->values, 0, to->capacity);
+
+    // Using writeValueArray in a loop not necessary since the 
+    // count and capacity is already given. The only thing left
+    // is to allocate the values in "to" using GROW_ARRAY.
+    for (int i = 0; i < to->count; i++)
+        to->values[i] = from->values[i];
+}
+
 void writeValueArray(ValueArray* array, Value value) {
     if (array->capacity < array->count + 1) {
         int oldCapacity = array->capacity;
