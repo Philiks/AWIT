@@ -12,6 +12,15 @@ void disassembleChunk(Chunk* chunk, const char* name) {
     }
 }
 
+static int elementInstruction(const char* name, Chunk* chunk,
+                                int offset) {
+    uint8_t constant = chunk->code[offset - 1];
+    printf("%-16s %4d '", name, constant);
+    printValue(chunk->constants.values[constant]);
+    printf("'\n");
+    return offset + 1;
+}
+
 static int constantInstruction(const char* name, Chunk* chunk, 
                                 int offset) {
     uint8_t constant = chunk->code[offset + 1];
@@ -97,6 +106,12 @@ int disassembleInstruction(Chunk* chunk, int offset) {
             return constantInstruction("OP_DEFINE_GLOBAL", chunk, offset);
         case OP_SET_GLOBAL:
             return constantInstruction("OP_SET_GLOBAL", chunk, offset);
+        case OP_GET_ELEMENT:
+            return elementInstruction("OP_GET_ELEMENT", chunk, offset);
+        case OP_DEFINE_ARRAY:
+            return elementInstruction("OP_DEFINE_ARRAY", chunk, offset);
+        case OP_SET_ELEMENT:
+            return elementInstruction("OP_SET_ELEMENT", chunk, offset);
         case OP_GET_UPVALUE:
             return byteInstruction("OP_GET_UPVALUE", chunk, offset);
         case OP_SET_UPVALUE:
