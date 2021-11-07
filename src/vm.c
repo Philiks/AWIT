@@ -174,6 +174,21 @@ static bool call(ObjClosure* closure, int argCount) {
 static bool callValue(Value callee, int argCount) {
     if (IS_OBJ(callee)) {
         switch (OBJ_TYPE(callee)) {
+            case OBJ_ARRAY: {
+                // argCount here serves as the index of the element.
+                ObjArray* array = AS_ARRAY(callee);
+                if (argCount >= array->elements.count) {
+                    runtimeError("Ang koleksyon ay naglalaman ng %d elemento ngunit nakatanggap ng %d.",
+                        array->elements.count, argCount);
+                    return false;
+                }
+
+                if (argCount < 0)
+                    push(array->elements.values[array->elements.count + argCount]);
+                else
+                    push(array->elements.values[argCount]);
+                return true;
+            }
             case OBJ_BOUND_METHOD: {
                 ObjBoundMethod* bound = AS_BOUND_METHOD(callee);
                 vm.stackTop[-argCount - 1] = bound->receiver;
@@ -430,6 +445,62 @@ static InterpretResult run() {
                 }
                 break;
             }
+            case OP_GET_ELEMENT: {
+                Value index = pop();
+                Value array = pop();
+
+                if (!IS_ARRAY(array)) {
+                    runtimeError("Tanging koleksyon lamang ang maaaring tawagin gamit ang '[]'.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                if (!IS_NUMBER(index)) {
+                    runtimeError("Inaasahan na makatanggap ng numero bilang indeks.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                frame->ip = ip;
+                if (!callValue(array, (int)AS_NUMBER(index))) {
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                ip = frame->ip;
+
+                break;
+            }
+            case OP_DEFINE_ARRAY: {
+                uint8_t elementCount = READ_BYTE();
+                ObjArray* array = newArray();
+
+                int i = elementCount;
+                // Use peek() since stack values are in reversed order. 
+                // i.e. [ 1, 2, 3, 4] -> [ 4, 3, 2, 1] in stack.
+                while (i > 0)
+                    writeValueArray(&array->elements, peek(--i));
+
+                vm.stackTop -= elementCount; // Remove elemets.
+
+                push(OBJ_VAL(array));
+                break;
+            }
+            case OP_SET_ELEMENT: {
+                Value value = pop();
+                Value index = pop();
+                Value array = pop();
+
+                if (!IS_ARRAY(array)) {
+                    runtimeError("Tanging koleksyon lamang ang maaaring tawagin gamit ang '[]'.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                if (!IS_NUMBER(index)) {
+                    runtimeError("Inaasahan na makatanggap ng numero bilang indeks.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                AS_ARRAY(array)->elements.values[(int)AS_NUMBER(index)] = value;
+                push(value); // Leave the value on the stack.
+                break;
+            } 
             case OP_GET_UPVALUE: {
                 uint8_t slot = READ_BYTE();
                 push(*frame->closure->upvalues[slot]->location);
