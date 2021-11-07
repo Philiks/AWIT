@@ -449,6 +449,7 @@ static InterpretResult run() {
                 Value index = pop();
                 Value array = pop();
 
+                frame->ip = ip;
                 if (!IS_ARRAY(array)) {
                     runtimeError("Tanging koleksyon lamang ang maaaring tawagin gamit ang '[]'.");
                     return INTERPRET_RUNTIME_ERROR;
@@ -459,7 +460,6 @@ static InterpretResult run() {
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
-                frame->ip = ip;
                 if (!callValue(array, (int)AS_NUMBER(index))) {
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -482,17 +482,66 @@ static InterpretResult run() {
                 push(OBJ_VAL(array));
                 break;
             }
+            case OP_DECLARE_ARRAY: {
+                // The element count here does not rely on the number of compiled expressions.
+                // The element count comes from the "value" of the compiled expression arr[n].
+                Value elementCount = pop();
+
+                if (!IS_NUMBER(elementCount)) {
+                    frame->ip = ip;
+                    runtimeError("Inaasahan na makatanggap ng numero para sa bilang ng mga elemento.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                if (AS_NUMBER(elementCount) < 0) {
+                    frame->ip = ip;
+                    runtimeError("Inaasahan na makatanggap ng numero na higit sa 0 para sa bilang ng mga elemento.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+
+                ObjArray* array = newArray();
+
+                int i = AS_NUMBER(elementCount);
+                // The array will be initialized with NULL.
+                while (i-- > 0)
+                    writeValueArray(&array->elements, NULL_VAL);
+
+                push(OBJ_VAL(array));
+                break;
+            }
+            case OP_MULTI_ARRAY: {
+                // - 1 was the rightmost array that was already processed.
+                uint8_t dimension = READ_BYTE() - 1;
+
+                while (dimension-- > 0) {
+                    ObjArray* array = AS_ARRAY(pop());
+                    int enclosingArraySize = (int)AS_NUMBER(pop());
+
+                    ObjArray* enclosing = newArray();
+                    while (enclosingArraySize-- > 0) {
+                        ObjArray* element = newArray();
+                        copyValueArray(&array->elements, &element->elements);
+                        writeValueArray(&enclosing->elements, OBJ_VAL(element));
+                    }
+
+                    push(OBJ_VAL(enclosing));
+                }
+
+                break;
+            }
             case OP_SET_ELEMENT: {
                 Value value = pop();
                 Value index = pop();
                 Value array = pop();
 
                 if (!IS_ARRAY(array)) {
+                    frame->ip = ip;
                     runtimeError("Tanging koleksyon lamang ang maaaring tawagin gamit ang '[]'.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
 
                 if (!IS_NUMBER(index)) {
+                    frame->ip = ip;
                     runtimeError("Inaasahan na makatanggap ng numero bilang indeks.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -513,6 +562,7 @@ static InterpretResult run() {
             }
             case OP_GET_PROPERTY: {
                 if (!IS_INSTANCE(peek(0))) {
+                    frame->ip = ip;
                     runtimeError("Tanging mga instansya lamang ang may mga katangian.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -534,6 +584,7 @@ static InterpretResult run() {
             }
             case OP_SET_PROPERTY: {
                 if (!IS_INSTANCE(peek(1))) {
+                    frame->ip = ip;
                     runtimeError("Tanging mga instansya lamang ang may mga katangian.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
@@ -691,6 +742,7 @@ static InterpretResult run() {
             case OP_INHERIT: {
                 Value superclass = peek(1);
                 if (!IS_CLASS(superclass)) {
+                    frame->ip = ip;
                     runtimeError("Uri lamang ang maaaring magpamana.");
                     return INTERPRET_RUNTIME_ERROR;
                 }
