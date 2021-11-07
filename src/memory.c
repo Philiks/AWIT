@@ -82,6 +82,11 @@ static void blackenObject(Obj* object) {
 #endif
 
     switch (objType(object)) {
+        case OBJ_ARRAY: {
+            ObjArray* array = (ObjArray*)object;
+            markArray(&array->elements);
+            break;
+        }
         case OBJ_BOUND_METHOD: {
             ObjBoundMethod* bound = (ObjBoundMethod*)object;
             markValue(bound->receiver);
@@ -117,9 +122,9 @@ static void blackenObject(Obj* object) {
         case OBJ_UPVALUE:
             markValue(((ObjUpvalue*)object)->closed);
             break;
-	case OBJ_STRING:
-	case OBJ_NATIVE:
-	    break; // Unreachable. Handled by the caller's if-statement.
+        case OBJ_STRING:
+        case OBJ_NATIVE:
+            break; // Unreachable. Handled by the caller's if-statement.
     }
 }
 
@@ -129,6 +134,11 @@ static void freeObject(Obj* object) {
 #endif
 
     switch (objType(object)) {
+        case OBJ_ARRAY:
+            //ObjArray* array = (ObjArray*)object;
+            //freeValueArray(&array->elements);
+            FREE(ObjArray, object);
+            break;
         case OBJ_BOUND_METHOD:
             FREE(ObjBoundMethod, object);
             break;
