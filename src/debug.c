@@ -13,11 +13,14 @@ void disassembleChunk(Chunk* chunk, const char* name) {
 }
 
 static int elementInstruction(const char* name, Chunk* chunk,
-                                int offset) {
-    uint8_t constant = chunk->code[offset - 1];
-    printf("%-16s %4d '", name, constant);
-    printValue(chunk->constants.values[constant]);
-    printf("'\n");
+                                int offset, int indexOffset) {
+    uint8_t index = chunk->code[offset - 1];
+    uint8_t constant = index - 1;
+    printf("%-16s %4d[%d] '", name, constant - indexOffset, index - indexOffset);
+    printValue(chunk->constants.values[constant - indexOffset]);
+    printf("[");
+    printValue(chunk->constants.values[index - indexOffset]);
+    printf("]'\n");
     return offset + 1;
 }
 
@@ -107,11 +110,15 @@ int disassembleInstruction(Chunk* chunk, int offset) {
         case OP_SET_GLOBAL:
             return constantInstruction("OP_SET_GLOBAL", chunk, offset);
         case OP_GET_ELEMENT:
-            return elementInstruction("OP_GET_ELEMENT", chunk, offset);
+            return elementInstruction("OP_GET_ELEMENT", chunk, offset, 0);
         case OP_DEFINE_ARRAY:
-            return elementInstruction("OP_DEFINE_ARRAY", chunk, offset);
+            return simpleInstruction("OP_DEFINE_ARRAY", offset);
+        case OP_DECLARE_ARRAY:
+            return simpleInstruction("OP_DECLARE_ARRAY", offset);
+        case OP_MULTI_ARRAY:
+            return simpleInstruction("OP_MULTI_ARRAY", offset);
         case OP_SET_ELEMENT:
-            return elementInstruction("OP_SET_ELEMENT", chunk, offset);
+            return elementInstruction("OP_SET_ELEMENT", chunk, offset, 1);
         case OP_GET_UPVALUE:
             return byteInstruction("OP_GET_UPVALUE", chunk, offset);
         case OP_SET_UPVALUE:
