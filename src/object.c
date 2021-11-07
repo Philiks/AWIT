@@ -131,13 +131,13 @@ static void printFunction(ObjFunction* function) {
 }
 
 static void printArray(ValueArray array) {
-    printf("[ ");
+    printf("[");
     for (int i = 0; i < array.count; i++) {
         printValue(array.values[i]);
-        printf(", ");
+        printf(",");
     }
     
-    printf("\b\b ]");
+    printf("\b]");
 }
 
 void printObject(Value value) {
