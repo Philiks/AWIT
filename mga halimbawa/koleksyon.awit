@@ -1,0 +1,25 @@
+// Define array.
+kilalanin a = [ 1, 2, 3, 4];
+
+// Access array using positive index.
+// [0] -> [count - 1]
+ipakita "a[0] = " + a[0];
+ipakita "a[1] = " + a[1];
+ipakita "a[2] = " + a[2];
+ipakita "a[3] = " + a[3];
+
+ipakita "";
+
+// Access array using negative index.
+// [count - 1] -> [0]
+ipakita "a[-1] = " + a[-1];
+ipakita "a[-2] = " + a[-2];
+ipakita "a[-3] = " + a[-3];
+ipakita "a[-4] = " + a[-4];
+
+ipakita "";
+
+// Assigning value to given index.
+a[3] = 69;
+ipakita "a[3] = 69";
+ipakita "a[-1] = " + a[-1];
