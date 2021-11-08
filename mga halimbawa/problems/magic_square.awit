@@ -1,0 +1,51 @@
+// Magic Square of (nxn) where n is odd.
+// i.e. n = 3
+//  2 7 6
+//  8 5 1
+//  4 3 8
+ipakita "Ibigay ang dimension ng parisukat: ";
+kilalanin n = basahin();
+
+// Initialize row & col so that '1' will be placed
+// on the rightmost middle of the array.
+kilalanin row = n \ 2;
+kilalanin col = n - 1;
+kilalanin magic_square[n * n];
+
+kada (kilalanin i = 1; i <= n * n; i++)
+{
+  kung (row < 0 at col == n)
+  {
+    row = 0;
+    col = n - 2;
+  }
+  kundiman
+  {
+    kung (row < 0) row = n - 1;
+    kung (col == n) col = 0;
+  }
+
+  kung (magic_square[(row * n) + col] != null)
+  {
+    row++;
+    col = col - 2;
+    kung (row == n) row = 0;
+    kung (col < 0) col = n - 1;
+  }
+
+  magic_square[(row * n) + col] = i;
+  
+  row--;
+  col++;
+}
+
+kada (kilalanin row = 0; row < n; row++)
+{
+  kilalanin row_str = "";
+  kada (kilalanin col = 0; col < n; col++)
+    row_str = row_str + magic_square[(row * n) + col] + " ";
+  ipakita row_str;
+}
+
+ipakita "Magic Number = n*(n*n+1)/2";
+ipakita "Sum for each row, column, and diagonal is: " + (n*(n*n+1)/2);
