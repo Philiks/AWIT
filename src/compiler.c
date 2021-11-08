@@ -451,7 +451,8 @@ static void binary(bool canAssign) {
         case TOKEN_BAWAS:           emitByte(OP_SUBTRACT); break;
         case TOKEN_MODULO:          emitByte(OP_MODULO); break;
         case TOKEN_BITUIN:          emitByte(OP_MULTIPLY); break;
-        case TOKEN_PAHILIS:         emitByte(OP_DIVIDE); break;
+        case TOKEN_ATRAS_PAHILIS:   emitByte(OP_INT_DIVIDE); break;
+        case TOKEN_SULONG_PAHILIS:  emitByte(OP_DIVIDE); break;
         default: return; // Unreachable.
     }
 }
@@ -691,7 +692,8 @@ ParseRule rules[] = {
     [TOKEN_TULDOK]           = {NULL,      dot,       PREC_CALL},
     [TOKEN_TULDOK_KUWIT]     = {NULL,      NULL,      PREC_NONE},
     [TOKEN_TUTULDOK]         = {NULL,      NULL,      PREC_NONE},
-    [TOKEN_PAHILIS]          = {NULL,      binary,    PREC_FACTOR},
+    [TOKEN_ATRAS_PAHILIS]    = {NULL,      binary,    PREC_FACTOR},
+    [TOKEN_SULONG_PAHILIS]   = {NULL,      binary,    PREC_FACTOR},
     [TOKEN_BITUIN]           = {NULL,      binary,    PREC_FACTOR},
     [TOKEN_MODULO]           = {NULL,      binary,    PREC_FACTOR},
     [TOKEN_BAWAS]            = {unary,     binary,    PREC_TERM},

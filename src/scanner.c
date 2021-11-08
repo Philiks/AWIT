@@ -220,19 +220,20 @@ Token scanToken() {
     if (isDigit(c)) return number();
 
     switch (c) {
-        case '(': return makeToken(TOKEN_KALIWANG_PAREN);
-        case ')': return makeToken(TOKEN_KANANG_PAREN);
-        case '{': return makeToken(TOKEN_KALIWANG_BRACE);
-        case '}': return makeToken(TOKEN_KANANG_BRACE);
-        case '[': return makeToken(TOKEN_KALIWANG_BRACKET);
-        case ']': return makeToken(TOKEN_KANANG_BRACKET);
-        case ':': return makeToken(TOKEN_TUTULDOK);
-        case ';': return makeToken(TOKEN_TULDOK_KUWIT);
-        case ',': return makeToken(TOKEN_KUWIT);
-        case '.': return makeToken(TOKEN_TULDOK);
-        case '/': return makeToken(TOKEN_PAHILIS);
-        case '*': return makeToken(TOKEN_BITUIN);
-        case '%': return makeToken(TOKEN_MODULO);
+        case '(':  return makeToken(TOKEN_KALIWANG_PAREN);
+        case ')':  return makeToken(TOKEN_KANANG_PAREN);
+        case '{':  return makeToken(TOKEN_KALIWANG_BRACE);
+        case '}':  return makeToken(TOKEN_KANANG_BRACE);
+        case '[':  return makeToken(TOKEN_KALIWANG_BRACKET);
+        case ']':  return makeToken(TOKEN_KANANG_BRACKET);
+        case ':':  return makeToken(TOKEN_TUTULDOK);
+        case ';':  return makeToken(TOKEN_TULDOK_KUWIT);
+        case ',':  return makeToken(TOKEN_KUWIT);
+        case '.':  return makeToken(TOKEN_TULDOK);
+        case '\\': return makeToken(TOKEN_ATRAS_PAHILIS);
+        case '/':  return makeToken(TOKEN_SULONG_PAHILIS);
+        case '*':  return makeToken(TOKEN_BITUIN);
+        case '%':  return makeToken(TOKEN_MODULO);
         case '-': 
             return makeToken(
                 match('-') ? TOKEN_BAWAS_ISA : TOKEN_BAWAS);
