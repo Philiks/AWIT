@@ -636,6 +636,17 @@ static InterpretResult run() {
                 break;
             }
             case OP_MULTIPLY:   BINARY_OP(NUMBER_VAL, *); break;
+            case OP_INT_DIVIDE: {
+                if (!IS_NUMBER(peek(0)) || !IS_NUMBER(peek(1))) {
+                    frame->ip = ip;
+                    runtimeError("Inaasahang parehong numero ang gamit.");
+                    return INTERPRET_RUNTIME_ERROR;
+                }
+                double b = AS_NUMBER(pop());
+                double a = AS_NUMBER(pop());
+                push(NUMBER_VAL((int)(a / b)));
+                break;
+            }
             case OP_DIVIDE:     BINARY_OP(NUMBER_VAL, /); break;
             case OP_NOT:
                 push(BOOL_VAL(isFalsey(pop())));
