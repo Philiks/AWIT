@@ -310,7 +310,7 @@ static bool isFalsey(Value value) {
     return IS_NULL(value) || (IS_BOOL(value) && !AS_BOOL(value)); 
 }
 
-static ObjString* toString(Value value, char *buffer) {
+static ObjString* toString(Value value, char* buffer) {
     ObjString* string;
 
     switch (value.type) {
@@ -327,11 +327,14 @@ static ObjString* toString(Value value, char *buffer) {
             length = snprintf(buffer, length, "%.0f", AS_NUMBER(value));
             return copyString(buffer, length);
         }
-        case VAL_OBJ: return AS_STRING(value);
-        default: {
-            runtimeError(
-                "Ang nilalaman ay hindi magawang salita.");
-            return NULL;
+        case VAL_OBJ: {
+            if (!IS_STRING(value)) {
+                runtimeError(
+                    "Ang halaga ay hindi magawang salita.");
+                return NULL;
+            }
+
+            return AS_STRING(value);
         }
     }
 }
