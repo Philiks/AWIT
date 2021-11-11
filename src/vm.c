@@ -324,7 +324,7 @@ static ObjString* toString(Value value, char* buffer) {
         }
         case VAL_NUMBER: {
             int length = VAL_BUFFER_SIZE;
-            length = snprintf(buffer, length, "%.0f", AS_NUMBER(value));
+            length = snprintf(buffer, length, "%f", AS_NUMBER(value));
             return copyString(buffer, length);
         }
         case VAL_OBJ: {
