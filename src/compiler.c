@@ -544,8 +544,43 @@ static void or_(bool canAssign) {
 }
 
 static void string(bool canAssign) {
-    emitConstant(OBJ_VAL(copyString(parser.previous.start + 1, 
-                                    parser.previous.length - 2)));
+    // Escape sequences squashes two characters into one.
+    int newLen = parser.previous.length - 2; // - 2 to remove " at beginning and end.
+    char newString[newLen];
+
+    for (int oldStringIndex = 1, newStringIndex = 0; 
+         oldStringIndex <= parser.previous.length - 2; 
+         oldStringIndex++, newStringIndex++) {
+        // Continue the iteration if current character is not '\'.
+        if (parser.previous.start[oldStringIndex] != '\\') {
+            newString[newStringIndex] = parser.previous.start[oldStringIndex];
+            continue;
+        }
+
+        oldStringIndex++; // Consume the '\'.
+        switch (parser.previous.start[oldStringIndex]) {
+            case 'a':  newString[newStringIndex] = '\a'; break;
+            case 'b':  newString[newStringIndex] = '\b'; break;
+            case 'f':  newString[newStringIndex] = '\f'; break;
+            case 'n':  newString[newStringIndex] = '\n'; break;
+            case 'r':  newString[newStringIndex] = '\r'; break;
+            case 't':  newString[newStringIndex] = '\t'; break;
+            case 'v':  newString[newStringIndex] = '\v'; break;
+            case '\\': newString[newStringIndex] = '\\'; break;
+            case '"':  newString[newStringIndex] = '\"'; break;
+            default: {
+                // The preceding '\' does not resolve into an escape seaquence.
+                // Treat both characters as individual characters and skip the
+                // squashing.
+                newString[newStringIndex] = '\\';
+                newString[++newStringIndex] = parser.previous.start[oldStringIndex];
+                continue;
+            }
+        }
+        newLen--; // Squash the two characters.
+    }
+
+    emitConstant(OBJ_VAL(copyString(newString, newLen)));
 }
 
 static void decrement(bool canAssign) {
