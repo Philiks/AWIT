@@ -563,6 +563,7 @@ static void string(bool canAssign) {
             case 'b':  newString[newStringIndex] = '\b'; break;
             case 'f':  newString[newStringIndex] = '\f'; break;
             case 'n':  newString[newStringIndex] = '\n'; break;
+            case 'e':  newString[newStringIndex] = '\e'; break;
             case 'r':  newString[newStringIndex] = '\r'; break;
             case 't':  newString[newStringIndex] = '\t'; break;
             case 'v':  newString[newStringIndex] = '\v'; break;
