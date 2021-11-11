@@ -39,6 +39,10 @@ static char advance() {
     return scanner.current[-1];
 }
 
+static char previous() {
+    return scanner.current[-1];
+}
+
 static char peek() {
     return *scanner.current;
 }
@@ -197,7 +201,8 @@ static Token number() {
 }
 
 static Token string() {
-    while (peek() != '"' && !isAtEnd()) {
+    while (!isAtEnd()) {
+        if (peek() == '"' && previous() != '\\') break;
         if (peek() == '\n') scanner.line++;
         advance();
     }
@@ -252,7 +257,7 @@ Token scanToken() {
         case '<':
             return makeToken(
                 match('=') ? TOKEN_BABA_PAREHO : TOKEN_BABA);
-        case '"': return string();        
+        case '"': return string();
     }
 
     return errorToken("Hindi kilalang simbolo.");
