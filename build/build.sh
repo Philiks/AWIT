@@ -5,23 +5,26 @@ TAR=$(which tar)
 
 function makeAll() {
   for os in $@; do
-		cd $os; make; cd -
+		cd $os; make &; wait; cd -
   done
 }
 
 function compress() {
-  PATH="../"
+  PATH="../../"
   for os in $@; do
 		cd $os
 		case $os in
-		  win32) $ZIP -r awit_windows32.zip awit.exe ${PATH}README.md ${PATH}mga\ halimbawa
+		  win32) $ZIP -r awit_windows32.zip awit.exe ${PATH}README.md ${PATH}mga\ halimbawa &
+             wait
              $MV awit_windows32.zip ../
 			;;
-		  win64) $ZIP -r awit_windows64.zip awit.exe ${PATH}README.md ${PATH}mga\ halimbawa
+		  win64) $ZIP -r awit_windows64.zip awit.exe ${PATH}README.md ${PATH}mga\ halimbawa &
+             wait
              $MV awit_windows64.zip ../
 			;;
-		  linux) $TAR -cJf awit_linux.tar.xz awit ${PATH}README.md ${PATH}mga\ halimbawa
-             $MV awit_linux.tar.xz ../
+		  linux) $TAR -cf awit_linux.tar.gz awit ${PATH}README.md ${PATH}mga\ halimbawa &
+             wait
+             $MV awit_linux.tar.gz ../
 			;;
 	  esac
 		cd -
@@ -75,24 +78,20 @@ fi
 
 if [ "${1}" = "win32" ] || [ "${1}" = "win64" ] || [ "${1}" = "linux" ] ; then
     printf "${LBLUE}Compiling...${NC}\n"
-    makeAll ${1} &
-    wait
+    makeAll ${1}
 
     printf "${LBLUE}\nCompressing...${NC}\n"
-    compress ${1} &
-    wait
+    compress ${1}
 
     printf "${LBLUE}Done!${NC}\n"
     exit 0
 fi
 
 printf "${LBLUE}Compiling...${NC}\n"
-makeAll linux win32 win64 &
-wait
+makeAll linux win32 win64
 
 printf "${LBLUE}\nCompressing...${NC}\n"
-compress linux win32 win64 &
-wait
+compress linux win32 win64
 
 printf "${LBLUE}\nDone! You can now update your release assets.\n"
 printf "${NC}https://github.com/philiks/AWIT/releases/tag/${1}\n"
