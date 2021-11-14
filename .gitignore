@@ -3,3 +3,5 @@
 src/awit.exe
 # For unix-based system.
 src/awit
+build/*zip
+build/*tar.gz
