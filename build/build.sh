@@ -5,29 +5,34 @@ TAR=$(which tar)
 
 function makeAll() {
   for os in $@; do
-		cd $os; make &; wait; cd -
+		cd $os; make; cd -
   done
 }
 
 function compress() {
-  PATH="../../"
+  # Go back to parent directory where 'mga halimbawa' is located.
+  cd ../
   for os in $@; do
-		cd $os
 		case $os in
-		  win32) $ZIP -r awit_windows32.zip awit.exe ${PATH}README.md ${PATH}mga\ halimbawa &
-             wait
-             $MV awit_windows32.zip ../
+		  win32) $MV ./build/win32/awit.exe ./
+        $ZIP -r awit_windows32.zip awit.exe README.md mga\ halimbawa &
+        wait
+        $MV ./awit_windows32.zip ./build
+        rm awit.exe
 			;;
-		  win64) $ZIP -r awit_windows64.zip awit.exe ${PATH}README.md ${PATH}mga\ halimbawa &
-             wait
-             $MV awit_windows64.zip ../
+		  win64) $MV ./build/win64/awit.exe ./
+        $ZIP -r awit_windows64.zip awit.exe README.md mga\ halimbawa &
+        wait
+        $MV ./awit_windows64.zip ./build
+        rm awit.exe
 			;;
-		  linux) $TAR -cf awit_linux.tar.gz awit ${PATH}README.md ${PATH}mga\ halimbawa &
-             wait
-             $MV awit_linux.tar.gz ../
+		  linux) $MV ./build/linux/awit ./
+        $TAR -cf awit_linux.tar.gz awit README.md mga\ halimbawa &
+        wait
+        $MV ./awit_linux.tar.gz ./build
+        rm awit
 			;;
 	  esac
-		cd -
   done
 }
 
