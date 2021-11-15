@@ -174,21 +174,21 @@ Token              | Name
 
 ### Mga Pahayag
 - #### Ipakita
--- Syntax `ipakita <ekspresyon> ;`
+Syntax `ipakita <ekspresyon> ;`
 ```
 ipakita "Kamusta ka naman?";
 ```
 
 - #### Kilalanin (Declaration / Definition)
 -- *declaration*<br />
--- Syntax `kilalanin <identifier> ;`
+Syntax `kilalanin <identifier> ;`
 ```
 kilalanin walangHalaga;
 ipakita walangHalaga; // null
 ```
 
 -- *definition*<br />
--- Syntax `[kilalanin] <identifier> = <ekspresyon> ;`
+Syntax `[kilalanin] <identifier> = <ekspresyon> ;`
 ```
 kilalanin mayHalaga = tama;
 ipakita mayHalaga; // tama
@@ -197,7 +197,7 @@ ipakita mayHalaga; // 12
 ```
 
 - #### Kung [Kundiman]
--- Syntax `kung ( <ekspresyon> ) <pahayag> [kundiman <pahayag]`
+Syntax `kung ( <ekspresyon> ) <pahayag> [kundiman <pahayag]`
 ```
 kilalanin edad = 16;
 kung (edad < 18)
@@ -207,7 +207,7 @@ kundiman
 ```
 
 - #### Suriin [Kapag] [Palya]
--- Syntax `suriin ( <ekspresyon> ) { [kapag <ekspresyon> : <pahayag>]+ [palya : <pahayag>] }`
+Syntax `suriin ( <ekspresyon> ) { [kapag <ekspresyon> : <pahayag>]+ [palya : <pahayag>] }`
 ```
 kilalanin numero = 2;
 suriin (numero) {
@@ -221,7 +221,7 @@ suriin (numero) {
 ```
 
 - #### Habang
--- Syntax `habang ( <ekspresyon> ) <pahayag>`
+Syntax `habang ( <ekspresyon> ) <pahayag>`
 ```
 // Prints 0 - 9
 kilalanin n = 0;
@@ -230,7 +230,7 @@ habang (n < 10)
 ```
 
 - #### Gawin-Habang
--- Syntax `gawin <pahayag> habang ( <ekspresyon> ) ;`
+Syntax `gawin <pahayag> habang ( <ekspresyon> ) ;`
 ```
 // Prints 0 - 10
 kilalanin n = 0;
@@ -240,7 +240,7 @@ habang (n < 10);
 ```
 
 - #### Kada
--- Syntax `kada ( <ekspresyon> ; <ekspresyon> ; <ekspresyon> ) <pahayag> `
+Syntax `kada ( <ekspresyon> ; <ekspresyon> ; <ekspresyon> ) <pahayag> `
 ```
 // Prints 0 - 9;
 kada (kilalanin n = 0; n < 10; n++) {
@@ -249,7 +249,7 @@ kada (kilalanin n = 0; n < 10; n++) {
 ```
 
 - #### Itigil
--- Syntax `itigil ;`
+Syntax `itigil ;`
 ```
 kilalanin ctr = 0;
 habang (tama) {
@@ -263,7 +263,7 @@ habang (tama) {
 > **Note:** Can only be used inside looping statements `habang` `gawin-habang` `kada`.
 
 - #### Ituloy
--- Syntax `ituloy ;`
+Syntax `ituloy ;`
 ```
 // DANGER!!! This will cause an infinite loop DO NOT TRY.
 // Pero ikaw bahala ;)
@@ -279,7 +279,7 @@ habang (tama) {
 > **Note:** Can only be used inside looping statements `habang` `gawin-habang` `kada`.
 
 - #### Ibalik
--- Syntax `ibalik [<ekspresyon>] ;`
+Syntax `ibalik [<ekspresyon>] ;`
 ```
 gawain pagsamahin(a, b) {
   ibalik a;
@@ -290,7 +290,7 @@ ipakita pagsamahin(34, 35); // 69
 > **Note:** Can only be used inside functions `gawain`.
 
 - #### Mga Pahayag
--- Syntax `{ [<pahayag>]* }`
+Syntax `{ [<pahayag>]* }`
 ```
 kilalanin a = "labas";
 {
@@ -301,7 +301,7 @@ kilalanin a = "labas";
 ```
 
 - #### Ekspresyong Pahayag
--- Syntax `<ekspresyon> ;`
+Syntax `<ekspresyon> ;`
 ```
 kilalanin ctr = 0;
 ctr++; // Useful
@@ -309,7 +309,7 @@ ctr++; // Useful
 ```
 
 - #### Gawain
--- Syntax `gawain <identifier> ( [<identifier> ,]* ) { <pahayag> }`
+Syntax `gawain <identifier> ( [<identifier> ,]* ) { <pahayag> }`
 ```
 gawain kamusta() {
   ipakita "Kamusta!";
@@ -319,7 +319,7 @@ kamusta();
 ```
 
 - #### Closures
--- Syntax `gawain <identifier> ( [<identifier> ,]* ) {
+Syntax `gawain <identifier> ( [<identifier> ,]* ) {
   <gawain> }`
 ```
 kilalanin tagapalit;
@@ -346,7 +346,7 @@ tagatingin(); // 420
 ```
 
 - #### Uri
--- Syntax `uri <identifier> { <pahayag>* }`
+Syntax `uri <identifier> { <pahayag>* }`
 ```
 uri Tao {
   kain() {
@@ -371,7 +371,7 @@ programmer.puyat = tama;
 
 - #### Instantiation and Initialization
 -- *instantiation*<br />
--- Syntax `kilalanin <identifier> = <class-name>( [<ekspresyon> ,]* ) ;`
+Syntax `kilalanin <identifier> = <class-name>( [<ekspresyon> ,]* ) ;`
 ```
 kilalanin tao = Tao();
 tao.kain();
@@ -380,7 +380,7 @@ tao.laro();
 ```
 
 -- *initialization*<br />
--- Syntax `sim ( [<identifier> ,]* ) { <pahayag> }`
+Syntax `sim ( [<identifier> ,]* ) { <pahayag> }`
 ```
 uri Tao {
   sim(pangalan, kasarian) {
@@ -394,7 +394,7 @@ uri Tao {
 > **Note:** You don't have to put the fields inside the `uri` just prefix it with `ito.`.
 
 - #### Inheritance
--- Syntax `uri <identifier> < <class-name> { <pahayag> }`
+Syntax `uri <identifier> < <class-name> { <pahayag> }`
 ```
 uri Estudyante < Tao {
   sim(pangkatTaon, pangalan, kasarian) {
@@ -433,6 +433,62 @@ AWIT have 22 reserved words and they are:<br />
 `at`, `gawain`, `gawin`, `habang`, `ibalik`, `ipakita`, `itigil`, `ito`,
 `ituloy`, `kada`, `kapag`, `kilalanin`, `kundiman`, `kung`, `mali`, `mula`,
 `null`, `palya`, `suriin`, `o`, `tama`, `uri`
+
+## Lexical grammar
+#### &lt;token&gt;
+::= [&lt;keyword&gt;](#keyword)<br />
+&emsp;| [&lt;identifier&gt;](#identifier)<br />
+&emsp;| [&lt;constant&gt;](#constant)<br />
+&emsp;| [&lt;string-literal&gt;](#string-literal)<br />
+&emsp;| [&lt;punctuator&gt;](#punctuator)<br />
+&emsp;;<br />
+#### &lt;keyword&gt;
+::= 'at' | 'ituloy' | 'mula'<br />
+&emsp;| 'gawain' | 'kada' | 'null'<br />
+&emsp;| 'gawin' | 'kapag' | 'palya'<br />
+&emsp;| 'habang' | 'kilalanin' | 'suriin'<br />
+&emsp;| 'ibalik' | 'kundiman' | 'o'<br />
+&emsp;| 'ipakita' | 'kung' | 'tama'<br />
+&emsp;| 'itigil' | 'mali' | 'uri' | 'ito'<br />
+&emsp;;<br />
+#### &lt;identifier&gt;
+&emsp;| [&lt;alphabet&gt;](#alphabet) [&lt;alpha-numeric&gt;](#alpha-numeric)[\*](#kleene-star) ;<br />
+#### &lt;alpha-numeric&gt;
+::= [&lt;alphabet&gt;](#alphabet) | [&lt;digit&gt;](#digit) ;<br />
+#### &lt;alphabet&gt;
+::= 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'g' | 'h' | 'i' | 'j' | 'k' | 'l' | 'm'<br />
+&emsp;| 'n' | 'o' | 'p' | 'q' | 'r' | 's' | 't' | 'u' | 'v' | 'w' | 'x' | 'y' | 'z'<br />
+&emsp;| 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G' | 'H' | 'I' | 'J' | 'K' | 'L' | 'M'<br />
+&emsp;| 'N' | 'O' | 'P' | 'Q' | 'R' | 'S' | 'T' | 'U' | 'V' | 'W' | 'X' | 'Y' | 'Z'<br />
+&emsp;;<br />
+#### &lt;digit&gt;
+::= '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;<br />
+#### &lt;constant&gt;
+::= [&lt;number-constant&gt;](#number-constant) | [&lt;boolean-constant&gt;](#boolean-constant) | 'null' ;<br />
+#### &lt;number-constant&gt;
+::= [&lt;whole-number&gt;](#whole-number) | [&lt;fractional-number&gt;](#fractional-number) ;<br />
+#### &lt;whole-number&gt;
+::= [&lt;digit&gt;](#digit)[+](#plus) ;<br />
+#### &lt;fractional-number&gt;
+::= [&lt;digit&gt;](#digit)[\*](#kleene-star) '.' [&lt;digit&gt;](#digit)[\*](#kleene-star) ;<br />
+#### &lt;boolean-constant&gt;
+::= 'tama' | 'mali' ;<br />
+#### &lt;string-literal&gt;
+::= \`"\` [&lt;character&gt;](#character)[+](#plus) \`"\` ;<br />
+#### &lt;character&gt;
+::= [&lt;escape-sequence&gt;](#escape-sequence)<br />
+&emsp;| /\* Any character on the source code except double-quotation (") and backslash (&#92;) \*/<br />
+&emsp;;<br />
+#### &lt;escape-sequence&gt;
+::= '\"' | '&#92;&#92;'<br />
+&emsp;| '\a' | '\b' | '\f' | '\n' | '\e' | '\r' | '\t' | '\v'<br />
+&emsp;;<br />
+#### &lt;punctuator&gt;
+::= '(' | ')' | '{' | '}' | '[' | ']' | '.'<br />
+&emsp;| '++' | '--' | '+' | '-' | '!'<br />
+&emsp;| '&#92;' | '/' | '\*' | '%' | '&lt;' | '>' | '&lt;=' | '>=' | '==' | '!='<br />
+&emsp;| ',' | ';' | ':' | '='<br />
+&emsp;;<br />
 
 ## Authors
 This language is all thanks to these people:<br />
