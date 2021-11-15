@@ -180,14 +180,14 @@ ipakita "Kamusta ka naman?";
 ```
 
 - #### Kilalanin (Declaration / Definition)
--- *declaration*<br />
+*declaration*<br />
 Syntax `kilalanin <identifier> ;`
 ```
 kilalanin walangHalaga;
 ipakita walangHalaga; // null
 ```
 
--- *definition*<br />
+*definition*<br />
 Syntax `[kilalanin] <identifier> = <ekspresyon> ;`
 ```
 kilalanin mayHalaga = tama;
@@ -370,7 +370,7 @@ programmer.puyat = tama;
 ```
 
 - #### Instantiation and Initialization
--- *instantiation*<br />
+*instantiation*<br />
 Syntax `kilalanin <identifier> = <class-name>( [<ekspresyon> ,]* ) ;`
 ```
 kilalanin tao = Tao();
@@ -379,7 +379,7 @@ tao.tulog();
 tao.laro();
 ```
 
--- *initialization*<br />
+*initialization*<br />
 Syntax `sim ( [<identifier> ,]* ) { <pahayag> }`
 ```
 uri Tao {
