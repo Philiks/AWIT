@@ -1,0 +1,39 @@
+gawain ayosPaangat(salita)
+{
+ kilalanin letra;
+ kilalanin i;
+ kilalanin j;
+
+ kada(i=0;i<haba;i++) // O(n^2)
+ {
+  kada(j=0;j<(haba-1);j++)
+  {
+   kung (bilangNumero(salita[j]) > bilangNumero(salita[j+1]))
+   {
+    letra = salita[j];
+    salita[j] = salita[j+1];
+    salita[j+1] = letra;
+   }
+  }
+ }
+ ibalik salita;
+}
+
+gawain ayAnagram(salita1, salita2)
+{
+salita1 = ayosPaangat(salita1); // O(n^2)
+salita2 = ayosPaangat(salita2); // O(n^2)
+kada (kilalanin i = 0; i < haba; i++) // O(n)
+kung (salita1[i] != salita2[i])
+ ibalik mali;
+ibalik tama;
+}
+
+kilalanin salita1 = ["a","t","s","u","m","u","k"];
+kilalanin salita2 = ["k","u","m","u","s","t","a"];
+kilalanin haba = 7;
+
+kung (ayAnagram(salita1, salita2)) // Time complexity: 2n^2 + n + 
+ipakita "Anagram ang dalawang numero";
+kundiman
+ipakita "Hindi anagram ang dalawang numero";
