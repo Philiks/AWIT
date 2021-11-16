@@ -34,6 +34,6 @@ kilalanin salita2 = ["k","u","m","u","s","t","a"];
 kilalanin haba = 7;
 
 kung (ayAnagram(salita1, salita2)) // Time complexity: 2n^2 + n + 
-ipakita "Anagram ang dalawang numero";
+ipakita "Anagram ang dalawang salita";
 kundiman
-ipakita "Hindi anagram ang dalawang numero";
+ipakita "Hindi anagram ang dalawang salita";
