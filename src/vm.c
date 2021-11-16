@@ -62,6 +62,27 @@ static bool willNotOverflow() {
     return true;
 }
 
+static Value stringLengthNative(int argCount, Value* args) {
+    if (!(isSameArity(argCount, 1) && willNotOverflow()))
+        return BOOL_VAL(false);
+    if (!(IS_STRING(args[0])))
+        return BOOL_VAL(false);
+    
+    return NUMBER_VAL(strlen(AS_CSTRING(args[0])));
+}
+
+static Value charToIntNative(int argCount, Value* args) {
+    if (!(isSameArity(argCount, 1) && willNotOverflow()))
+        return BOOL_VAL(false);
+    if (!(IS_STRING(args[0])))
+        return BOOL_VAL(false);
+    
+    int len = strlen(AS_CSTRING(args[0]));
+    if (len != 1) return NUMBER_VAL(-1);
+
+    return NUMBER_VAL((int)AS_CSTRING(args[0])[0]);
+}
+
 static Value hasFieldNative(int argCount, Value* args) {
     if (!(isSameArity(argCount, 2) && willNotOverflow()))
         return BOOL_VAL(false);
@@ -136,6 +157,8 @@ void initVM() {
     defineNative("oras", clockNative);
     defineNative("basahin", scanNative);
     defineNative("mayKatangian", hasFieldNative);
+    defineNative("sukatSalita", stringLengthNative);
+    defineNative("bilangNumero", charToIntNative);
 }
 
 void freeVM() {
