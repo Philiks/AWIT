@@ -1,6 +1,9 @@
 # AWIT
 ***“AWIT”*** which stands for, ***“Algorithm written in Tagalog”***, complete with its own syntaxes, and built-in virtual machine whose main purpose is the accurate and precise analysis of algorithms that exist. However, it will not be strictly in Tagalog but in the Filipino language and the reason for the naming is to preserve the Filipino word, *“AWIT”* instead of *“AWIF”*. This will be a great educational programming language for Filipino freelancers, students or professional developers who have interest in both algorithms and programming languages.
 
+## TODO
+Refer to [things that are yet to be done or simply TODO.md](./TODO.md) for the list of the TODO's that the developers are yet to accomplish.
+
 ## Appreciation
 The language implementation was based on [LOX's clox implementation](https://github.com/munificent/craftinginterpreters/). From the scanner to the compiler to the VM heck even the Garbage Collector. Although there are a lot of significant differences, the implementations were highly inspired by [Nystrom's Crafting Interpreters](https://craftinginterpreters.com). Again, thank you!
 
