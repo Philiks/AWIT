@@ -115,7 +115,7 @@ Token | Name
   `-` | subtraction
   `*` | multiplication
   `/` | division
-  `&#92;' | integer division
+  `\` | integer division
   `%` | modulo division (remainder)
 ```
 1 + 2 - 3 * 4 / 5 % 6; // This results to 1 btw.
