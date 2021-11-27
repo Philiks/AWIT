@@ -115,9 +115,14 @@ Token | Name
   `-` | subtraction
   `*` | multiplication
   `/` | division
+  `&#92;' | integer division
   `%` | modulo division (remainder)
 ```
 1 + 2 - 3 * 4 / 5 % 6; // This results to 1 btw.
+```
+```
+5 &#92; 2; // This will be evaluated as 2
+5 / 2; // This will be evaluated as 2.5
 ```
 
 - #### Unary
