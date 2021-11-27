@@ -1,0 +1,59 @@
+kilalanin array = [ 3, 1, 4, 2, 5, 9, 7, 10, 6, 8 ];
+kilalanin len = 10;
+
+gawain merge(start, middle, end)
+{
+  kilalanin lookup_len = end - start + 1;
+  kilalanin temp[lookup_len];
+
+  kada (kilalanin i = 0; i < lookup_len; i++)
+    temp[i] = array[start + i];
+
+  kilalanin temp_middle = middle - start;
+  kilalanin array_ptr = start;
+  kilalanin left_ptr = 0;
+  kilalanin right_ptr = temp_middle;
+
+  habang (left_ptr < temp_middle at right_ptr < lookup_len)
+  {
+    kung (temp[left_ptr] < temp[right_ptr])
+      array[array_ptr] = temp[left_ptr++];
+    kundiman
+      array[array_ptr] = temp[right_ptr++];
+
+    array_ptr++;
+  }
+
+  habang (left_ptr < temp_middle)
+    array[array_ptr++] = temp[left_ptr++];
+
+  habang (right_ptr < lookup_len)
+    array[array_ptr++] = temp[right_ptr++];
+}
+
+gawain mergeSort(start, end)
+{
+  kung (start == end) ibalik null;
+
+  kilalanin lookup_len = end - start + 1;
+  kilalanin middle = ((lookup_len) \ 2) + start;
+
+  mergeSort(start, middle - 1);
+  mergeSort(middle, end);
+
+  merge(start, middle, end);
+}
+
+ipakita "Merge Sort";
+
+kilalanin array_str = "Unsorted array -> ";
+kada (kilalanin i = 0; i < len; i++)
+  array_str = array_str + " " + array[i];
+ipakita array_str;
+
+mergeSort(0, len - 1);
+
+kilalanin array_str = "Sorted array   -> ";
+kada (kilalanin i = 0; i < len; i++)
+  array_str = array_str + " " + array[i];
+ipakita array_str;
