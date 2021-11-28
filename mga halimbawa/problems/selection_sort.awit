@@ -1,7 +1,21 @@
-kilalanin a = [3, 5, 1, 4, 2];
-kilalanin len = 5;
+kilalanin len = 250;
+kilalanin a[len];
 
-kilalanin array = "Unsorted array -> ";
+// Assign value.
+kada (kilalanin i = 0; i < len; i++)
+  a[i] = i + 1; // 1 is starting value.
+
+// Randomize order.
+kada (kilalanin i = 0; i < len; i++)
+{
+  kilalanin rand_index = pasumala(len);
+  kilalanin temp = a[i];
+  a[i] = a[rand_index];
+  a[rand_index] = temp;
+}
+
+ipakita "Unsorted array: ";
+kilalanin array = "";
 kada (kilalanin i = 0; i < len; i++)
   array = array + " " + a[i];
 ipakita array;
@@ -19,7 +33,8 @@ kada (kilalanin i = 0; i < len; i++)
   a[lowest_index] = temp;
 }
 
-kilalanin array = "Sorted array   -> ";
+ipakita "\nSorted array: ";
+kilalanin array = "";
 kada (kilalanin i = 0; i < len; i++)
   array = array + " " + a[i];
 ipakita array;

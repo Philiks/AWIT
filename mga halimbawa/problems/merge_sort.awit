@@ -1,5 +1,18 @@
-kilalanin array = [ 3, 1, 4, 2, 5, 9, 7, 10, 6, 8 ];
-kilalanin len = 10;
+kilalanin len = 250;
+kilalanin array[len];
+
+// Assign value.
+kada (kilalanin i = 0; i < len; i++)
+  array[i] = i + 1; // 1 is starting value.
+
+// Randomize order.
+kada (kilalanin i = 0; i < len; i++)
+{
+  kilalanin rand_index = pasumala(len);
+  kilalanin temp = array[i];
+  array[i] = array[rand_index];
+  array[rand_index] = temp;
+}
 
 gawain merge(start, middle, end)
 {
@@ -46,14 +59,16 @@ gawain mergeSort(start, end)
 
 ipakita "Merge Sort";
 
-kilalanin array_str = "Unsorted array -> ";
+ipakita "Unsorted array: ";
+kilalanin array_str = "";
 kada (kilalanin i = 0; i < len; i++)
   array_str = array_str + " " + array[i];
 ipakita array_str;
 
 mergeSort(0, len - 1);
 
-kilalanin array_str = "Sorted array   -> ";
+ipakita "Sorted array: ";
+kilalanin array_str = "";
 kada (kilalanin i = 0; i < len; i++)
   array_str = array_str + " " + array[i];
 ipakita array_str;
