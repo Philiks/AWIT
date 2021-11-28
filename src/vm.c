@@ -62,6 +62,16 @@ static bool willNotOverflow() {
     return true;
 }
 
+static Value randomNumberNative(int argCount, Value* args) {
+    if (!(isSameArity(argCount, 1) && willNotOverflow()))
+        return BOOL_VAL(false);
+    if (!(IS_NUMBER(args[0])))
+        return BOOL_VAL(false);
+    
+    // Random int between 0 to args[0] value, exclusive.
+    return NUMBER_VAL(rand() % (int)AS_NUMBER(args[0]));
+}
+
 static Value stringLengthNative(int argCount, Value* args) {
     if (!(isSameArity(argCount, 1) && willNotOverflow()))
         return BOOL_VAL(false);
@@ -138,6 +148,9 @@ static void defineNative(const char* name, NativeFn function) {
 }
 
 void initVM() {
+    // Initialize RNG by using the current time as seed.
+    srand(time(NULL));
+
     resetStack();
     vm.objects = NULL;
     vm.bytesAllocated = 0;
@@ -159,6 +172,7 @@ void initVM() {
     defineNative("mayKatangian", hasFieldNative);
     defineNative("sukatSalita", stringLengthNative);
     defineNative("bilangNumero", charToIntNative);
+    defineNative("pasumala", randomNumberNative);
 }
 
 void freeVM() {
