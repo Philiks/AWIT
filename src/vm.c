@@ -350,6 +350,27 @@ static bool isFalsey(Value value) {
 static ObjString* toString(Value value, char* buffer) {
     ObjString* string;
 
+#ifdef NAN_BOXING
+    if (IS_BOOL(value)) {
+        buffer = AS_BOOL(value) ? "tama" : "mali";
+        return copyString(buffer, 4);
+    } else if (IS_NULL(value)) {
+        buffer = "null";
+        return copyString(buffer, 4);
+    } else if (IS_NUMBER(value)) {
+        int length = VAL_BUFFER_SIZE;
+        length = snprintf(buffer, length, "%g", AS_NUMBER(value));
+        return copyString(buffer, length);
+    } else if (IS_OBJ(value)) {
+        if (!IS_STRING(value)) {
+            runtimeError(
+                "Ang halaga ay hindi magawang salita.");
+            return NULL;
+        }
+
+        return AS_STRING(value);
+    }
+#else
     switch (value.type) {
         case VAL_BOOL: {
             buffer = AS_BOOL(value) ? "tama" : "mali";
@@ -374,6 +395,7 @@ static ObjString* toString(Value value, char* buffer) {
             return AS_STRING(value);
         }
     }
+#endif
 }
 
 static bool concatenate() {
